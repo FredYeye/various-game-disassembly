@@ -1,7 +1,7 @@
 ;snes registers
 {
-	!M7A      = $211B ;Rotation/Scaling Parameter A & Maths 16bit operand (w2)
-	!M7B      = $211C ;Rotation/Scaling Parameter B & Maths 8bit operand (w2)
+    !M7A      = $211B ;Rotation/Scaling Parameter A & Maths 16bit operand (w2)
+    !M7B      = $211C ;Rotation/Scaling Parameter B & Maths 8bit operand (w2)
 
     !MPYL     = $2134 ;PPU1 Signed Multiply Result   (lower 8bit)
     !MPYH     = $2136 ;PPU1 Signed Multiply Result   (upper 8bit)
@@ -10,20 +10,20 @@
     !WRDIVB   = $4206 ;Set unsigned 8bit Divisor and Start Division
 
     !RDDIVL   = $4214 ;Unsigned Division Result (Quotient) (lower 8bit)
-	!RDMPYL   = $4216 ;Unsigned Division Remainder / Multiply Product (lower 8bit)
+    !RDMPYL   = $4216 ;Unsigned Division Remainder / Multiply Product (lower 8bit)
 }
 
 
 ;toggle register widths
 {
-	!A8   = "sep #$20"
-	!A16  = "rep #$20"
+    !A8   = "sep #$20"
+    !A16  = "rep #$20"
 
-	!X8   = "sep #$10"
-	!X16  = "rep #$10"
+    !X8   = "sep #$10"
+    !X16  = "rep #$10"
 
-	!AX8  = "sep #$30"
-	!AX16 = "rep #$30"
+    !AX8  = "sep #$30"
+    !AX16 = "rep #$30"
 }
 
 
@@ -66,49 +66,49 @@ rng:
 
 { ;C0092A - C00945
 multiply: ;signed multiply of A(16 bit) and X(8 bit), 3 byte result is stored in $08
-	!X16
-	!A8
-	sta !M7A
-	xba
-	sta !M7A
-	txa
-	sta !M7B
-	ldy !MPYL : sty $08
-	lda !MPYH : sta $0A
-	!A16
-	rts
+    !X16
+    !A8
+    sta !M7A
+    xba
+    sta !M7A
+    txa
+    sta !M7B
+    ldy !MPYL : sty $08
+    lda !MPYH : sta $0A
+    !A16
+    rts
 }
 
 
 { ;C04EB1 - C04F60
 _C04EB1: ;calculate lure + bait rating
-	lda #$571C : sta $00
-	lda #$00C1 : sta $02 ;$00 = address of lure_ratings
-	lda !current_lure : and #$00FF
-	ldx #$0007
-	jsr multiply ;$08 = current_lure * 7
-	lda $08
+    lda #$571C : sta $00
+    lda #$00C1 : sta $02 ;$00 = address of lure_ratings
+    lda !current_lure : and #$00FF
+    ldx #$0007
+    jsr multiply ;$08 = current_lure * 7
+    lda $08
     clc : adc $00
     sta $00 ;add multiplication result to address in $00
-	ldy !current_stage
-	lda [$00],Y : and #$00FF : sta !lure_rating
-	lda #$571C : sta $00
-	lda #$00C1 : sta $02 ;$00 = address of lure_ratings
-	lda !current_lure : and #$00FF
-	cmp #$0026
+    ldy !current_stage
+    lda [$00],Y : and #$00FF : sta !lure_rating
+    lda #$571C : sta $00
+    lda #$00C1 : sta $02 ;$00 = address of lure_ratings
+    lda !current_lure : and #$00FF
+    cmp #$0026
     bcc .4F4B ;jump if current lure is crank, minnow or topwater
 
-	cmp #$0057
+    cmp #$0057
     bcs .4F07 ;jump if current lure is rig
 
     ;buzz, spinner and rubber
-	lda !current_bait : and #$00FF
-	beq .4F2B
+    lda !current_bait : and #$00FF
+    beq .4F2B
 
-	lda #$0001
+    lda #$0001
     clc : adc !lure_rating ;add 1 to lure rating if bait is attached
-	sta !lure_rating
-	bra .4F2B
+    sta !lure_rating
+    bra .4F2B
 
 .4F07:
     lda !current_bait : and #$00FF
@@ -172,13 +172,13 @@ _C058BE: ;got fish on hook
     lda $1052 : cmp #$0001
     bne .58DF ;jump if player isn't holding X (maybe other conditions too, not sure)
 
-	lda !fishing_rating
-	sec : sbc #$0002 ;deduce 2 rating for holding the "go fast" button
-	bpl .not_negative
+    lda !fishing_rating
+    sec : sbc #$0002 ;deduce 2 rating for holding the "go fast" button
+    bpl .not_negative
 
-	lda #$0000
+    lda #$0000
 .not_negative:
-	sta !fishing_rating
+    sta !fishing_rating
 
 .58DF:
     lda !fishing_rating
@@ -191,36 +191,36 @@ _C058BE: ;got fish on hook
     cmp #$000C
     bcs .590F
 
-	cmp #$000B
+    cmp #$000B
     bcs .591B
 
-	cmp #$000A
+    cmp #$000A
     bcs .5927
 
-	cmp #$0009
+    cmp #$0009
     bcs .5933
 
-	brl .593F
+    brl .593F
 
 .5903:
     ldx #$1540 : ldy #$0005 : lda #$0002
-	brl .5992
+    brl .5992
 
 .590F:
     ldx #$1420 : ldy #$0004 : lda #$0002
     brl .5992
 
 .591B:
-	ldx #$1280 : ldy #$0003 : lda #$0002
-	brl .5992
+    ldx #$1280 : ldy #$0003 : lda #$0002
+    brl .5992
 
 .5927:
-	ldx #$1220 : ldy #$0002 : lda #$0002
-	brl .5992
+    ldx #$1220 : ldy #$0002 : lda #$0002
+    brl .5992
 
 .5933:
-	ldx #$1140 : ldy #$0001 : lda #$0002
-	brl .5992
+    ldx #$1140 : ldy #$0001 : lda #$0002
+    brl .5992
 
 .593F: ;smallest fish possible
     ldx #$0900 : ldy #$0000 : lda #$0003
@@ -350,19 +350,19 @@ fish_weight:
 
 { ;C05A69 - C05A7F
 _C05A69:
-	lda $0D20
-	cmp #$1600
+    lda $0D20
+    cmp #$1600
     bcc .5A7F
 
-	cmp #$2000
+    cmp #$2000
     bcc .5A79
 
-	inc !caught_biggest_fish_today
+    inc !caught_biggest_fish_today
 .5A79:
-	inc !fishes_caught_current_zone
-	inc !fishes_caught_per_day
+    inc !fishes_caught_current_zone
+    inc !fishes_caught_per_day
 .5A7F:
-	rts
+    rts
 }
 
 
@@ -496,13 +496,13 @@ lure_ratings:
     db 0, 6, 2, 4, 8, 0, 2 ;16: long bill 5 inch
     db 0, 6, 2, 4, 8, 0, 2 ;17: long bill 5 inch
 
-	db 7, 6, 6, 0, 0, 7, 6 ;18: jerk bait 4 inch
-	db 7, 6, 6, 0, 0, 7, 6 ;19: jerk bait 4 inch
-	db 7, 6, 6, 0, 0, 7, 6 ;1A: jerk bait 4 inch
+    db 7, 6, 6, 0, 0, 7, 6 ;18: jerk bait 4 inch
+    db 7, 6, 6, 0, 0, 7, 6 ;19: jerk bait 4 inch
+    db 7, 6, 6, 0, 0, 7, 6 ;1A: jerk bait 4 inch
 
-	db 6, 6, 6, 0, 4, 3, 6 ;1B: long bill 2.5 inch
-	db 6, 6, 6, 0, 4, 3, 6 ;1C: long bill 2.5 inch
-	db 6, 6, 6, 0, 4, 3, 6 ;1D: long bill 2.5 inch
+    db 6, 6, 6, 0, 4, 3, 6 ;1B: long bill 2.5 inch
+    db 6, 6, 6, 0, 4, 3, 6 ;1C: long bill 2.5 inch
+    db 6, 6, 6, 0, 4, 3, 6 ;1D: long bill 2.5 inch
 
     db 6, 6, 6, 0, 4, 3, 6 ;1E: jerk bait 2.5 inch
     db 6, 6, 6, 0, 4, 3, 6 ;1F: jerk bait 2.5 inch
@@ -527,148 +527,148 @@ lure_ratings:
     db 6, 7, 8, 1, 1, 6, 8 ;2D: buzz bait 1/4 oz
 
     ;spinner bait
-	db 7, 4, 6, 2, 4, 7, 6 ;2E: single willow leaf 1/2 oz
-	db 7, 3, 5, 1, 3, 7, 5 ;2F: single willow leaf 1/2 oz
-	db 7, 5, 6, 1, 1, 6, 6 ;30: single willow leaf 1/4 oz
-	db 6, 4, 5, 1, 1, 5, 5 ;31: single willow leaf 1/4 oz
-	db 7, 3, 5, 1, 3, 7, 5 ;32: single willow leaf 1/2 oz
-	db 7, 3, 5, 1, 3, 7, 5 ;33: single willow leaf 1/2 oz
-	db 6, 4, 5, 1, 1, 5, 5 ;34: single willow leaf 1/4 oz
-	db 6, 4, 5, 1, 1, 5, 5 ;35: single willow leaf 1/4 oz
-	db 6, 6, 6, 1, 2, 6, 6 ;36: colorado 1/2 oz
-	db 5, 5, 5, 0, 1, 5, 5 ;37: colorado 1/2 oz
-	db 4, 7, 5, 6, 2, 4, 5 ;38: colorado 1/4 oz
-	db 3, 7, 4, 5, 1, 3, 4 ;39: colorado 1/4 oz
-	db 5, 5, 5, 0, 1, 5, 5 ;3A: colorado 1/2 oz
-	db 5, 5, 5, 0, 1, 5, 5 ;3B: colorado 1/2 oz
-	db 3, 7, 4, 5, 1, 3, 4 ;3C: colorado 1/4 oz
-	db 3, 7, 4, 5, 1, 3, 4 ;3D: colorado 1/4 oz
-	db 6, 4, 7, 5, 5, 7, 7 ;3E: double willow leaf 1/2 oz
-	db 6, 4, 7, 5, 5, 7, 7 ;3F: double willow leaf 1/2 oz
-	db 6, 4, 7, 5, 5, 7, 7 ;40: double willow leaf 1/2 oz
-	db 6, 4, 7, 5, 5, 7, 7 ;41: double willow leaf 1/2 oz
-	db 7, 4, 6, 4, 0, 6, 6 ;42: colorado 1/2 oz
-	db 7, 4, 6, 4, 0, 6, 6 ;43: colorado 1/2 oz
-	db 5, 8, 7, 0, 0, 4, 7 ;44: colorado 1/4 oz
-	db 5, 8, 7, 0, 0, 4, 7 ;45: colorado 1/4 oz
+    db 7, 4, 6, 2, 4, 7, 6 ;2E: single willow leaf 1/2 oz
+    db 7, 3, 5, 1, 3, 7, 5 ;2F: single willow leaf 1/2 oz
+    db 7, 5, 6, 1, 1, 6, 6 ;30: single willow leaf 1/4 oz
+    db 6, 4, 5, 1, 1, 5, 5 ;31: single willow leaf 1/4 oz
+    db 7, 3, 5, 1, 3, 7, 5 ;32: single willow leaf 1/2 oz
+    db 7, 3, 5, 1, 3, 7, 5 ;33: single willow leaf 1/2 oz
+    db 6, 4, 5, 1, 1, 5, 5 ;34: single willow leaf 1/4 oz
+    db 6, 4, 5, 1, 1, 5, 5 ;35: single willow leaf 1/4 oz
+    db 6, 6, 6, 1, 2, 6, 6 ;36: colorado 1/2 oz
+    db 5, 5, 5, 0, 1, 5, 5 ;37: colorado 1/2 oz
+    db 4, 7, 5, 6, 2, 4, 5 ;38: colorado 1/4 oz
+    db 3, 7, 4, 5, 1, 3, 4 ;39: colorado 1/4 oz
+    db 5, 5, 5, 0, 1, 5, 5 ;3A: colorado 1/2 oz
+    db 5, 5, 5, 0, 1, 5, 5 ;3B: colorado 1/2 oz
+    db 3, 7, 4, 5, 1, 3, 4 ;3C: colorado 1/4 oz
+    db 3, 7, 4, 5, 1, 3, 4 ;3D: colorado 1/4 oz
+    db 6, 4, 7, 5, 5, 7, 7 ;3E: double willow leaf 1/2 oz
+    db 6, 4, 7, 5, 5, 7, 7 ;3F: double willow leaf 1/2 oz
+    db 6, 4, 7, 5, 5, 7, 7 ;40: double willow leaf 1/2 oz
+    db 6, 4, 7, 5, 5, 7, 7 ;41: double willow leaf 1/2 oz
+    db 7, 4, 6, 4, 0, 6, 6 ;42: colorado 1/2 oz
+    db 7, 4, 6, 4, 0, 6, 6 ;43: colorado 1/2 oz
+    db 5, 8, 7, 0, 0, 4, 7 ;44: colorado 1/4 oz
+    db 5, 8, 7, 0, 0, 4, 7 ;45: colorado 1/4 oz
 
     ;rubber jig
-	db 2, 2, 6, 4, 2, 2, 6 ;46: rubber jig 1/4 oz
-	db 2, 2, 6, 4, 2, 2, 6 ;47: rubber jig 1/4 oz
-	db 2, 2, 4, 5, 2, 2, 4 ;48: rubber jig 3/8 oz
-	db 2, 2, 4, 5, 2, 2, 4 ;49: rubber jig 3/8 oz
-	db 3, 1, 5, 5, 4, 3, 5 ;4A: rubber jig 1/2 oz
-	db 3, 1, 5, 5, 4, 3, 5 ;4B: rubber jig 1/2 oz
-	db 2, 2, 6, 4, 2, 2, 6 ;4C: rubber jig 1/4 oz
-	db 2, 2, 6, 4, 2, 2, 6 ;4D: rubber jig 1/4 oz
-	db 2, 2, 4, 6, 2, 2, 4 ;4E: rubber jig 3/8 oz
-	db 2, 2, 4, 6, 2, 2, 4 ;4F: rubber jig 3/8 oz
-	db 2, 1, 5, 5, 4, 3, 5 ;50: rubber jig 1/2 oz
-	db 3, 1, 5, 5, 4, 3, 5 ;51: rubber jig 1/2 oz
-	db 2, 2, 4, 5, 5, 2, 4 ;52: rubber jig 1 oz
-	db 2, 2, 4, 5, 5, 2, 4 ;53: rubber jig 1 oz
-	db 3, 4, 5, 1, 0, 5, 5 ;54: flipping jig 3/8 oz
-	db 3, 4, 5, 1, 0, 5, 5 ;55: flipping jig 5/8 oz
-	db 3, 4, 5, 1, 0, 5, 5 ;56: flipping jig 1 oz
+    db 2, 2, 6, 4, 2, 2, 6 ;46: rubber jig 1/4 oz
+    db 2, 2, 6, 4, 2, 2, 6 ;47: rubber jig 1/4 oz
+    db 2, 2, 4, 5, 2, 2, 4 ;48: rubber jig 3/8 oz
+    db 2, 2, 4, 5, 2, 2, 4 ;49: rubber jig 3/8 oz
+    db 3, 1, 5, 5, 4, 3, 5 ;4A: rubber jig 1/2 oz
+    db 3, 1, 5, 5, 4, 3, 5 ;4B: rubber jig 1/2 oz
+    db 2, 2, 6, 4, 2, 2, 6 ;4C: rubber jig 1/4 oz
+    db 2, 2, 6, 4, 2, 2, 6 ;4D: rubber jig 1/4 oz
+    db 2, 2, 4, 6, 2, 2, 4 ;4E: rubber jig 3/8 oz
+    db 2, 2, 4, 6, 2, 2, 4 ;4F: rubber jig 3/8 oz
+    db 2, 1, 5, 5, 4, 3, 5 ;50: rubber jig 1/2 oz
+    db 3, 1, 5, 5, 4, 3, 5 ;51: rubber jig 1/2 oz
+    db 2, 2, 4, 5, 5, 2, 4 ;52: rubber jig 1 oz
+    db 2, 2, 4, 5, 5, 2, 4 ;53: rubber jig 1 oz
+    db 3, 4, 5, 1, 0, 5, 5 ;54: flipping jig 3/8 oz
+    db 3, 4, 5, 1, 0, 5, 5 ;55: flipping jig 5/8 oz
+    db 3, 4, 5, 1, 0, 5, 5 ;56: flipping jig 1 oz
 
     ;rig
-	db 4, 4, 2, 2, 2, 4, 2 ;57: jig head 1/32 oz
-	db 3, 4, 3, 3, 1, 3, 3 ;58: jig head 1/16 oz
-	db 2, 3, 4, 3, 1, 1, 4 ;59: jig head 1/8 oz
-	db 1, 2, 3, 2, 1, 1, 3 ;5A: jig head 3/16 oz
-	db 1, 1, 4, 3, 2, 0, 4 ;5B: jig head 1/4 oz
-	db 3, 3, 3, 2, 2, 3, 3 ;5C: texas rig 1/8 oz
-	db 3, 3, 3, 2, 2, 3, 3 ;5D: texas rig 3/16 oz
-	db 3, 3, 3, 2, 2, 3, 3 ;5E: texas rig 1/4 oz
-	db 3, 2, 3, 3, 3, 2, 3 ;5F: florida rig 1/16 oz
-	db 3, 2, 3, 3, 3, 2, 3 ;60: florida rig 1/8 oz     !!bug!! bait ratings gets ratings starting from the last rating here!
-	db 3, 2, 3, 3, 3, 2, 3 ;61: florida rig 3/16 oz
-	db 3, 2, 3, 3, 3, 2, 3 ;62: florida rig 1/4 oz
-	db 3, 2, 3, 3, 3, 2, 3 ;63: florida rig 1/2 oz
-	db 2, 1, 3, 4, 4, 1, 3 ;64: carolina rig 1 oz, 2 ft
-	db 3, 2, 1, 1, 1, 2, 1 ;65: carolina rig 1 oz, 2.5 ft
-	db 4, 4, 2, 1, 1, 4, 2 ;66: carolina rig 1 oz, 3 ft
-	db 2, 1, 3, 4, 4, 1, 3 ;67: carolina rig 1/2 oz, 2 ft
-	db 3, 2, 1, 1, 1, 2, 1 ;68: carolina rig 1/2 oz, 2.5 ft
-	db 4, 4, 2, 1, 1, 4, 2 ;69: carolina rig 1/2 oz, 3 ft
-	db 3, 2, 2, 3, 1, 2, 2 ;6A: carolina rig 1/4 oz, 2 ft
-	db 3, 3, 3, 2, 1, 2, 3 ;6B: carolina rig 1/4 oz, 2.5 ft
-	db 2, 4, 4, 3, 1, 1, 4 ;6C: carolina rig 1/4 oz, 3 ft
-	db 4, 3, 2, 1, 1, 4, 2 ;6D: split shot rig 1 ft
-	db 3, 3, 3, 3, 3, 4, 3 ;6E: split shot rig 1.5 ft
-	db 1, 4, 3, 4, 1, 0, 3 ;6F: split shot rig 2 ft
-	db 4, 3, 4, 0, 0, 4, 4 ;70: weightless
+    db 4, 4, 2, 2, 2, 4, 2 ;57: jig head 1/32 oz
+    db 3, 4, 3, 3, 1, 3, 3 ;58: jig head 1/16 oz
+    db 2, 3, 4, 3, 1, 1, 4 ;59: jig head 1/8 oz
+    db 1, 2, 3, 2, 1, 1, 3 ;5A: jig head 3/16 oz
+    db 1, 1, 4, 3, 2, 0, 4 ;5B: jig head 1/4 oz
+    db 3, 3, 3, 2, 2, 3, 3 ;5C: texas rig 1/8 oz
+    db 3, 3, 3, 2, 2, 3, 3 ;5D: texas rig 3/16 oz
+    db 3, 3, 3, 2, 2, 3, 3 ;5E: texas rig 1/4 oz
+    db 3, 2, 3, 3, 3, 2, 3 ;5F: florida rig 1/16 oz
+    db 3, 2, 3, 3, 3, 2, 3 ;60: florida rig 1/8 oz     !!bug!! bait ratings gets ratings starting from the last rating here!
+    db 3, 2, 3, 3, 3, 2, 3 ;61: florida rig 3/16 oz
+    db 3, 2, 3, 3, 3, 2, 3 ;62: florida rig 1/4 oz
+    db 3, 2, 3, 3, 3, 2, 3 ;63: florida rig 1/2 oz
+    db 2, 1, 3, 4, 4, 1, 3 ;64: carolina rig 1 oz, 2 ft
+    db 3, 2, 1, 1, 1, 2, 1 ;65: carolina rig 1 oz, 2.5 ft
+    db 4, 4, 2, 1, 1, 4, 2 ;66: carolina rig 1 oz, 3 ft
+    db 2, 1, 3, 4, 4, 1, 3 ;67: carolina rig 1/2 oz, 2 ft
+    db 3, 2, 1, 1, 1, 2, 1 ;68: carolina rig 1/2 oz, 2.5 ft
+    db 4, 4, 2, 1, 1, 4, 2 ;69: carolina rig 1/2 oz, 3 ft
+    db 3, 2, 2, 3, 1, 2, 2 ;6A: carolina rig 1/4 oz, 2 ft
+    db 3, 3, 3, 2, 1, 2, 3 ;6B: carolina rig 1/4 oz, 2.5 ft
+    db 2, 4, 4, 3, 1, 1, 4 ;6C: carolina rig 1/4 oz, 3 ft
+    db 4, 3, 2, 1, 1, 4, 2 ;6D: split shot rig 1 ft
+    db 3, 3, 3, 3, 3, 4, 3 ;6E: split shot rig 1.5 ft
+    db 1, 4, 3, 4, 1, 0, 3 ;6F: split shot rig 2 ft
+    db 4, 3, 4, 0, 0, 4, 4 ;70: weightless
 
     ;bait
-	db 2, 2, 4, 3, 1, 1, 4 ;71: straight worm 6 inch
-	db 1, 1, 4, 4, 2, 0, 4 ;72: straight worm 6 inch
+    db 2, 2, 4, 3, 1, 1, 4 ;71: straight worm 6 inch
+    db 1, 1, 4, 4, 2, 0, 4 ;72: straight worm 6 inch
     db 3, 2, 2, 2, 1, 4, 2 ;73: straight worm 6 inch
-	db 3, 2, 4, 3, 1, 2, 4 ;74: straight worm 4 inch
-	db 2, 1, 4, 4, 2, 1, 4 ;75: straight worm 4 inch
-	db 4, 2, 2, 2, 1, 4, 2 ;76: straight worm 4 inch
-	db 1, 4, 4, 1, 0, 1, 4 ;77: straight worm 4 inch
-	db 4, 2, 3, 3, 2, 4, 3 ;78: straight worm 4 inch
-	db 2, 3, 3, 2, 0, 1, 3 ;79: straight worm 4 inch
-	db 4, 2, 2, 3, 2, 3, 2 ;7A: worm 3.5 inch
-	db 4, 2, 3, 2, 2, 4, 3 ;7B: worm 3.5 inch
-	db 2, 4, 4, 1, 0, 1, 4 ;7C: worm 3.5 inch
-	db 2, 3, 4, 3, 1, 3, 4 ;7D: worm 3.5 inch
-	db 2, 2, 2, 3, 3, 1, 2 ;7E: straight worm 3.5 inch
-	db 3, 2, 3, 2, 1, 3, 3 ;7F: straight worm 3.5 inch
-	db 3, 2, 2, 3, 2, 2, 2 ;80: straight worm 3.5 inch
-	db 2, 2, 2, 2, 2, 2, 2 ;81: ring worm 4 inch
-	db 2, 2, 2, 2, 2, 2, 2 ;82: ring worm 4 inch
-	db 2, 2, 2, 2, 2, 2, 2 ;83: ring worm 4 inch
-	db 3, 2, 2, 3, 1, 2, 2 ;84: straight worm 4 inch
-	db 1, 4, 4, 1, 1, 0, 4 ;85: straight worm 4 inch
-	db 3, 1, 1, 2, 2, 2, 1 ;86: straight worm 4 inch
-	db 4, 3, 2, 1, 1, 4, 2 ;87: stick bait 5 inch
-	db 3, 2, 2, 0, 0, 2, 2 ;88: stick bait 5 inch
-	db 2, 3, 4, 2, 1, 3, 4 ;89: paddle tail 4.5 inch
-	db 3, 3, 3, 3, 1, 4, 3 ;8A: paddle tail 3 inch
-	db 2, 3, 4, 1, 0, 2, 4 ;8B: paddle tail 5 inch
-	db 2, 3, 4, 1, 0, 2, 4 ;8C: paddle tail 5 inch
-	db 2, 2, 3, 2, 1, 1, 3 ;8D: paddle tail 3 inch
-	db 2, 2, 3, 2, 1, 1, 3 ;8E: paddle tail 3 inch
-	db 4, 2, 3, 1, 1, 3, 3 ;8F: tube bait 5 inch
-	db 4, 2, 3, 1, 1, 3, 3 ;90: tube bait 5 inch
-	db 4, 2, 3, 1, 1, 3, 3 ;91: tube bait 5 inch
-	db 4, 3, 3, 3, 3, 3, 3 ;92: tube bait 4 inch
-	db 4, 3, 3, 3, 3, 3, 3 ;93: tube bait 4 inch
-	db 4, 3, 3, 3, 3, 3, 3 ;94: tube bait 4 inch
-	db 2, 4, 4, 3, 3, 4, 4 ;95: tube bait 3 inch
-	db 2, 4, 4, 3, 3, 4, 4 ;96: tube bait 3 inch
-	db 2, 4, 4, 3, 3, 4, 4 ;97: tube bait 3 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;98: grub 6 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;99: grub 6 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;9A: grub 6 inch
-	db 4, 2, 3, 2, 1, 4, 3 ;9B: grub 6 inch            !!bug!! last grub bait gets values starting from the second rating here!
-	db 4, 2, 3, 2, 1, 4, 3 ;9C: grub 8 inch            !!bug!! any ratings after the first rating here goes unused
-	db 4, 2, 3, 2, 1, 4, 3 ;9D: grub 8 inch
-	db 4, 2, 3, 2, 1, 4, 3 ;9E: grub 8 inch
-	db 4, 2, 4, 1, 1, 3, 4 ;9F: grub 5 inch
-	db 4, 2, 4, 1, 1, 3, 4 ;A0: grub 5 inch
-	db 4, 2, 4, 1, 1, 3, 4 ;A1: grub 5 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;A2: grub 5 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;A3: grub 5 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;A4: grub 5 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;A5: grub 5 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;A6: grub 5 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;A7: grub 4 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;A8: grub 4 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;A9: grub 4 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;AA: grub 4 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;AB: grub 5 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;AC: grub 5 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;AD: grub 5 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;AE: grub 5 inch
-	db 3, 3, 3, 2, 1, 3, 3 ;AF: grub 5 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;B0: grub 4 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;B1: grub 4 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;B2: grub 4 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;B3: grub 4 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;B4: grub 4 inch
-	db 3, 4, 4, 2, 1, 4, 4 ;B5: grub 4 inch
+    db 3, 2, 4, 3, 1, 2, 4 ;74: straight worm 4 inch
+    db 2, 1, 4, 4, 2, 1, 4 ;75: straight worm 4 inch
+    db 4, 2, 2, 2, 1, 4, 2 ;76: straight worm 4 inch
+    db 1, 4, 4, 1, 0, 1, 4 ;77: straight worm 4 inch
+    db 4, 2, 3, 3, 2, 4, 3 ;78: straight worm 4 inch
+    db 2, 3, 3, 2, 0, 1, 3 ;79: straight worm 4 inch
+    db 4, 2, 2, 3, 2, 3, 2 ;7A: worm 3.5 inch
+    db 4, 2, 3, 2, 2, 4, 3 ;7B: worm 3.5 inch
+    db 2, 4, 4, 1, 0, 1, 4 ;7C: worm 3.5 inch
+    db 2, 3, 4, 3, 1, 3, 4 ;7D: worm 3.5 inch
+    db 2, 2, 2, 3, 3, 1, 2 ;7E: straight worm 3.5 inch
+    db 3, 2, 3, 2, 1, 3, 3 ;7F: straight worm 3.5 inch
+    db 3, 2, 2, 3, 2, 2, 2 ;80: straight worm 3.5 inch
+    db 2, 2, 2, 2, 2, 2, 2 ;81: ring worm 4 inch
+    db 2, 2, 2, 2, 2, 2, 2 ;82: ring worm 4 inch
+    db 2, 2, 2, 2, 2, 2, 2 ;83: ring worm 4 inch
+    db 3, 2, 2, 3, 1, 2, 2 ;84: straight worm 4 inch
+    db 1, 4, 4, 1, 1, 0, 4 ;85: straight worm 4 inch
+    db 3, 1, 1, 2, 2, 2, 1 ;86: straight worm 4 inch
+    db 4, 3, 2, 1, 1, 4, 2 ;87: stick bait 5 inch
+    db 3, 2, 2, 0, 0, 2, 2 ;88: stick bait 5 inch
+    db 2, 3, 4, 2, 1, 3, 4 ;89: paddle tail 4.5 inch
+    db 3, 3, 3, 3, 1, 4, 3 ;8A: paddle tail 3 inch
+    db 2, 3, 4, 1, 0, 2, 4 ;8B: paddle tail 5 inch
+    db 2, 3, 4, 1, 0, 2, 4 ;8C: paddle tail 5 inch
+    db 2, 2, 3, 2, 1, 1, 3 ;8D: paddle tail 3 inch
+    db 2, 2, 3, 2, 1, 1, 3 ;8E: paddle tail 3 inch
+    db 4, 2, 3, 1, 1, 3, 3 ;8F: tube bait 5 inch
+    db 4, 2, 3, 1, 1, 3, 3 ;90: tube bait 5 inch
+    db 4, 2, 3, 1, 1, 3, 3 ;91: tube bait 5 inch
+    db 4, 3, 3, 3, 3, 3, 3 ;92: tube bait 4 inch
+    db 4, 3, 3, 3, 3, 3, 3 ;93: tube bait 4 inch
+    db 4, 3, 3, 3, 3, 3, 3 ;94: tube bait 4 inch
+    db 2, 4, 4, 3, 3, 4, 4 ;95: tube bait 3 inch
+    db 2, 4, 4, 3, 3, 4, 4 ;96: tube bait 3 inch
+    db 2, 4, 4, 3, 3, 4, 4 ;97: tube bait 3 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;98: grub 6 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;99: grub 6 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;9A: grub 6 inch
+    db 4, 2, 3, 2, 1, 4, 3 ;9B: grub 6 inch            !!bug!! last grub bait gets values starting from the second rating here!
+    db 4, 2, 3, 2, 1, 4, 3 ;9C: grub 8 inch            !!bug!! any ratings after the first rating here goes unused
+    db 4, 2, 3, 2, 1, 4, 3 ;9D: grub 8 inch
+    db 4, 2, 3, 2, 1, 4, 3 ;9E: grub 8 inch
+    db 4, 2, 4, 1, 1, 3, 4 ;9F: grub 5 inch
+    db 4, 2, 4, 1, 1, 3, 4 ;A0: grub 5 inch
+    db 4, 2, 4, 1, 1, 3, 4 ;A1: grub 5 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;A2: grub 5 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;A3: grub 5 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;A4: grub 5 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;A5: grub 5 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;A6: grub 5 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;A7: grub 4 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;A8: grub 4 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;A9: grub 4 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;AA: grub 4 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;AB: grub 5 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;AC: grub 5 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;AD: grub 5 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;AE: grub 5 inch
+    db 3, 3, 3, 2, 1, 3, 3 ;AF: grub 5 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;B0: grub 4 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;B1: grub 4 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;B2: grub 4 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;B3: grub 4 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;B4: grub 4 inch
+    db 3, 4, 4, 2, 1, 4, 4 ;B5: grub 4 inch
     db 0, 0, 0, 0, 0, 0, 0 ;B6: pork
     db 0, 0, 0, 0, 0, 0, 0 ;B7: pork
     db 0, 0, 0, 0, 0, 0, 0 ;B8: pork
@@ -679,34 +679,34 @@ lure_ratings:
 { ;C1D90B -
 zone_rating:
 
-	.stage_offset:
-		dw .spring, $DE51, $E389, $E8C1, $EDF9, .championship, $E389
+    .stage_offset:
+        dw .spring, $DE51, $E389, $E8C1, $EDF9, .championship, $E389
 
 ;-----
 
-	.spring: ..championship:
-		dw ..a0, ..a1, ..a2, $D9A3, $D9C9, $D9EF, $DA0F, $DA39
-		dw $DA51, $DA6D, $DAA3, $DAE1, $DB0F, $DB31, $DB55, $DB91
-		dw $DBB1, $DBCB, $DC3D, $DC83, $DCB5, $DCB9, $DCD1, $DCF5
-		dw $DD25, $DD45, $DD67, $DD87, $DDCD, $DE25, $DE3B
+    .spring: ..championship:
+        dw ..a0, ..a1, ..a2, $D9A3, $D9C9, $D9EF, $DA0F, $DA39
+        dw $DA51, $DA6D, $DAA3, $DAE1, $DB0F, $DB31, $DB55, $DB91
+        dw $DBB1, $DBCB, $DC3D, $DC83, $DCB5, $DCB9, $DCD1, $DCF5
+        dw $DD25, $DD45, $DD67, $DD87, $DDCD, $DE25, $DE3B
 
-	..a0: dw ...s0, ...s1, ...s2, ...s3
-		...s0: dw $0100
-		...s1: dw $0100
-		...s2: dw $0200
-		...s3: dw $0200
+    ..a0: dw ...s0, ...s1, ...s2, ...s3
+        ...s0: dw $0100
+        ...s1: dw $0100
+        ...s2: dw $0200
+        ...s3: dw $0200
 
-	..a1: dw ...s0, ...s1, ...s2, ...s3
-		...s0: dw $0500, $0200, $0300
-		...s1: dw $0600
-		...s2: dw $0400, $0600, $0500
-		...s3: dw $0400, $0500, $0400, $0300, $0300
+    ..a1: dw ...s0, ...s1, ...s2, ...s3
+        ...s0: dw $0500, $0200, $0300
+        ...s1: dw $0600
+        ...s2: dw $0400, $0600, $0500
+        ...s3: dw $0400, $0500, $0400, $0300, $0300
 
-	..a2: dw ...s0, ...s1, ...s2, ...s3
-		...s0: dw $0600, $0500, $0600, $0500
-		...s1: dw $0400, $0400
-		...s2: dw $0300
-		...s3: dw $0300, $0400, $0700
+    ..a2: dw ...s0, ...s1, ...s2, ...s3
+        ...s0: dw $0600, $0500, $0600, $0500
+        ...s1: dw $0400, $0400
+        ...s2: dw $0300
+        ...s3: dw $0300, $0400, $0700
 
-	;todo
+    ;todo
 }
