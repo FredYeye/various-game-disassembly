@@ -1,3 +1,5 @@
+hirom
+
 ;snes registers
 {
     !M7A      = $211B ;Rotation/Scaling Parameter A & Maths 16bit operand (w2)
@@ -34,19 +36,42 @@
     !current_bait               = $0D13
     !fishes_caught_per_day      = $0D22
     !current_stage              = $0D3C
+    !competitor_name_list       = $0D66
+    !competitor_weight_stage    = $0D7C
     !fishing_rating             = $0DA8
     !lure_rating                = $1208
     !fishes_caught_current_zone = $122C
     !area_rating                = $133A
     !areas_visited              = $133C
+    !competitor_weight_day      = $1496
 }
 
 
+;competitor_name_list ($0D66)
+;00: hatori.y
+;01: b.nugent
+;02: t.morris
+;03: j.wan
+;04: syuya.t
+;05: r.pierce
+;06: s.deedon
+;07: p.smith
+;08: n.ford
+;09: j.leleu
+;0A: j.smith
+;0B: iku.m
+;0C: hiro.m
+;0D: b.ford
+;0E: masaki.s
+;0F: toshi.i
+;10: m.davis
+
+
 ;----------
 ;----------
 
 
-{ ;C008BD - C008D5
+{ : org $C008BD ;08BD - 08D5
 rng:
     php
     !AX16
@@ -64,7 +89,7 @@ rng:
 }
 
 
-{ ;C0092A - C00945
+{ : org $C0092A ;092A - 0945
 multiply: ;signed multiply of A(16 bit) and X(8 bit), 3 byte result is stored in $08
     !X16
     !A8
@@ -80,7 +105,69 @@ multiply: ;signed multiply of A(16 bit) and X(8 bit), 3 byte result is stored in
 }
 
 
-{ ;C04EB1 - C04F60
+{ : org $C03262 ;3262 - 3278
+_C03262:
+    ldx #$0000
+.3265:
+    sed
+    lda !competitor_weight_day,X
+    clc : adc !competitor_weight_stage,X
+    sta !competitor_weight_stage,X
+    cld
+    inx #2
+    cpx #$0016
+    bne .3265
+
+    rts
+}
+
+{ ;3279 - 32D8
+_C03279: ;related to competitor catch
+    lda !current_stage : asl : tax
+    lda competitor_weights,X : sta $00
+    lda #$00C1 : sta $02 ;$00 = address with offset based on stage
+    jsr rng : and #$0007 : asl : tax ;x = 0..7 * 2 | initial offset to store weights at, to randomize who gets which base weight
+    ldy #$0000
+.3294:
+    lda [$00],Y : sta !competitor_weight_day,X
+    inx #2
+    cpx #$0014
+    bne .32A3
+
+    ldx #$0000
+.32A3:
+    iny #2
+    cpy #$0014
+    bne .3294
+
+    ldx #$0000
+.32AD:
+    lda !competitor_weight_day,X
+    jsr .add_weight
+    sta !competitor_weight_day,X
+    inx #2
+    cpx #$0014
+    bne .32AD
+
+    rts
+
+.add_weight:
+    sta $00
+    jsr rng : and #$001F : sta $02
+.32C8:
+    sed
+    lda $00
+    clc : adc #$0001 ;add a random amount of weight, 0.01..0.32 lbs
+    sta $00
+    cld
+    dec $02
+    bpl .32C8
+
+    lda $00
+    rts
+}
+
+{ : org $C04EB1 ;4EB1 - 4F60
 _C04EB1: ;calculate lure + bait rating
     lda #$571C : sta $00
     lda #$00C1 : sta $02 ;$00 = address of lure_ratings
@@ -164,7 +251,7 @@ _C04EB1: ;calculate lure + bait rating
 }
 
 
-{ ;C058BE - C05A4F
+{ : org $C058BE ;58BE - 5A4F
 _C058BE: ;got fish on hook
     lda !area_rating
     clc : adc !lure_rating
@@ -391,7 +478,7 @@ division: ;unsigned divide of A(16 bit) and X(8 bit)
 }
 
 
-{ ;C06DFF - C06E51
+{ : org $C06DFF ;6DFF - 6E51
     lda !current_stage : asl : tax ;x = current stage * 2
     lda zone_rating_stage_offset,X : sta $00 ;$00 = --xxxx, xxxx = stage offset
     lda #$00C1 : sta $02                     ;$00 = C1xxxx
@@ -424,7 +511,11 @@ division: ;unsigned divide of A(16 bit) and X(8 bit)
 }
 
 
-{ ;C106B0 - C106FF
+;----------
+;----------
+
+
+{ : org $C106B0 ;06B0 - 06FF
 length_variance:
     dw $000, $002, $004, $006, $008, $010, $012, $016
     dw $020, $022, $024, $026, $028, $030, $032, $036
@@ -434,7 +525,7 @@ length_variance:
 }
 
 
-{ ;C10700 - C1074F
+{ ;0700 - 074F
 weight_variance:
     dw $00, $00, $00, $03, $03, $03, $03, $06
     dw $06, $06, $06, $09, $09, $09, $09, $12
@@ -444,52 +535,67 @@ weight_variance:
 }
 
 
-{ ;C13030 - C130BB
-fish_weight_lists: dw .spring, .3050, .3062, .3074, .3086, .3098, .30AA
+{ : org $C117D2 ;17D2 - 186B
+competitor_weights: ;base weights for the competition
+    dw .spring, .summer, .fall, .winter1, .winter2, .championship, .1858
 
-.spring: dw $123, $165, $174, $189, $207, $234, $288, $486, $642
-.3050: dw $114, $153, $165, $174, $186, $210, $255, $462, $615
-.3062: dw $150, $174, $186, $204, $228, $255, $312, $501, $672
-.3074: dw $096, $135, $144, $159, $177, $204, $246, $453, $492
-.3086: dw $084, $126, $135, $150, $159, $186, $234, $429, $534
-.3098: dw $123, $165, $174, $189, $207, $234, $288, $486, $642
-.30AA: dw $150, $174, $186, $204, $228, $255, $312, $501, $672
+.spring:       dw $1650, $1608, $1506, $1482, $1464, $1362, $1200, $1158, $1101, $1029
+.summer:       dw $1500, $1464, $1419, $1362, $1284, $1242, $1140, $1098, $1044, $0966
+.fall:         dw $1800, $1758, $1656, $1572, $1404, $1332, $1230, $0978, $1014, $0924
+.winter1:      dw $1296, $1218, $1056, $0972, $0804, $0732, $0630, $0378, $0324, $0414
+.winter2:      dw $1200, $1164, $1068, $0972, $0864, $0792, $0690, $0564, $0522, $0489
+.championship: dw $1650, $1608, $1506, $1482, $1464, $1362, $1200, $1158, $1101, $1029
+.1858:         dw $0735, $0728, $0711, $0703, $0691, $0687, $0674, $0669, $0652, $0645
 }
 
 
-{ ;C1571C
+{ : org $C13030 ;3030 - 30BB
+fish_weight_lists:
+    dw .spring, .summer, .fall, .winter1, .winter2, .championship, .30AA
+
+.spring:       dw $123, $165, $174, $189, $207, $234, $288, $486, $642
+.summer:       dw $114, $153, $165, $174, $186, $210, $255, $462, $615
+.fall:         dw $150, $174, $186, $204, $228, $255, $312, $501, $672
+.winter1:      dw $096, $135, $144, $159, $177, $204, $246, $453, $492
+.winter2:      dw $084, $126, $135, $150, $159, $186, $234, $429, $534
+.championship: dw $123, $165, $174, $189, $207, $234, $288, $486, $642
+.30AA:         dw $150, $174, $186, $204, $228, $255, $312, $501, $672
+}
+
+
+{ : org $C1571C ;571C - 5C31
 lure_ratings:
 
     ;each bait has 7 ratings, one per stage
 
     ;crank bait
-    db 5, 5, 8, 5, 2, 5, 8 ;$00: deep crank 18ft
-    db 5, 5, 8, 5, 2, 5, 8 ;$01: deep crank 18ft
-    db 5, 5, 8, 5, 2, 5, 8 ;$02: deep crank 18ft
+    db 5, 5, 8, 5, 2, 5, 8 ;00: deep crank 18ft
+    db 5, 5, 8, 5, 2, 5, 8 ;01: deep crank 18ft
+    db 5, 5, 8, 5, 2, 5, 8 ;02: deep crank 18ft
 
-    db 5, 5, 8, 5, 2, 5, 8 ;$03: deep crank 12ft
-    db 5, 5, 8, 5, 2, 5, 8 ;$04: deep crank 12ft
-    db 5, 5, 8, 5, 2, 5, 8 ;$05: deep crank 12ft
+    db 5, 5, 8, 5, 2, 5, 8 ;03: deep crank 12ft
+    db 5, 5, 8, 5, 2, 5, 8 ;04: deep crank 12ft
+    db 5, 5, 8, 5, 2, 5, 8 ;05: deep crank 12ft
 
-    db 5, 5, 8, 5, 2, 5, 8 ;$06: deep crank 9ft
-    db 5, 5, 8, 5, 2, 5, 8 ;$07: deep crank 9ft
-    db 5, 5, 8, 5, 2, 5, 8 ;$08: deep crank 9ft
+    db 5, 5, 8, 5, 2, 5, 8 ;06: deep crank 9ft
+    db 5, 5, 8, 5, 2, 5, 8 ;07: deep crank 9ft
+    db 5, 5, 8, 5, 2, 5, 8 ;08: deep crank 9ft
 
-    db 8, 7, 7, 4, 3, 7, 7 ;$09: shallow crank 6ft
-    db 8, 7, 7, 4, 3, 7, 7 ;$0A: shallow crank 6ft
-    db 8, 7, 7, 4, 3, 7, 7 ;$0B: shallow crank 6ft
+    db 8, 7, 7, 4, 3, 7, 7 ;09: shallow crank 6ft
+    db 8, 7, 7, 4, 3, 7, 7 ;0A: shallow crank 6ft
+    db 8, 7, 7, 4, 3, 7, 7 ;0B: shallow crank 6ft
 
-    db 6, 8, 8, 4, 4, 8, 8 ;$0C: shallow crank 3ft
-    db 6, 8, 8, 4, 4, 8, 8 ;$0D: shallow crank 3ft
-    db 6, 8, 8, 4, 4, 8, 8 ;$0E: shallow crank 3ft
+    db 6, 8, 8, 4, 4, 8, 8 ;0C: shallow crank 3ft
+    db 6, 8, 8, 4, 4, 8, 8 ;0D: shallow crank 3ft
+    db 6, 8, 8, 4, 4, 8, 8 ;0E: shallow crank 3ft
 
-    db 6, 4, 8, 5, 4, 4, 8 ;$0F: lipless crank rattle
-    db 6, 4, 8, 5, 4, 4, 8 ;$10: lipless crank rattle
-    db 6, 4, 8, 5, 4, 4, 8 ;$11: lipless crank rattle
+    db 6, 4, 8, 5, 4, 4, 8 ;0F: lipless crank rattle
+    db 6, 4, 8, 5, 4, 4, 8 ;10: lipless crank rattle
+    db 6, 4, 8, 5, 4, 4, 8 ;11: lipless crank rattle
 
-    db 6, 4, 8, 5, 4, 4, 8 ;$12: lipless crank silent
-    db 6, 4, 8, 5, 4, 4, 8 ;$13: lipless crank silent
-    db 6, 4, 8, 5, 4, 4, 8 ;$14: lipless crank silent
+    db 6, 4, 8, 5, 4, 4, 8 ;12: lipless crank silent
+    db 6, 4, 8, 5, 4, 4, 8 ;13: lipless crank silent
+    db 6, 4, 8, 5, 4, 4, 8 ;14: lipless crank silent
 
     ;minnow plug
     db 0, 6, 2, 4, 8, 0, 2 ;15: long bill 5 inch
@@ -622,6 +728,7 @@ lure_ratings:
     db 3, 2, 2, 3, 1, 2, 2 ;84: straight worm 4 inch
     db 1, 4, 4, 1, 1, 0, 4 ;85: straight worm 4 inch
     db 3, 1, 1, 2, 2, 2, 1 ;86: straight worm 4 inch
+
     db 4, 3, 2, 1, 1, 4, 2 ;87: stick bait 5 inch
     db 3, 2, 2, 0, 0, 2, 2 ;88: stick bait 5 inch
     db 2, 3, 4, 2, 1, 3, 4 ;89: paddle tail 4.5 inch
@@ -639,6 +746,7 @@ lure_ratings:
     db 2, 4, 4, 3, 3, 4, 4 ;95: tube bait 3 inch
     db 2, 4, 4, 3, 3, 4, 4 ;96: tube bait 3 inch
     db 2, 4, 4, 3, 3, 4, 4 ;97: tube bait 3 inch
+
     db 3, 3, 3, 2, 1, 3, 3 ;98: grub 6 inch
     db 3, 3, 3, 2, 1, 3, 3 ;99: grub 6 inch
     db 3, 3, 3, 2, 1, 3, 3 ;9A: grub 6 inch
@@ -669,6 +777,7 @@ lure_ratings:
     db 3, 4, 4, 2, 1, 4, 4 ;B3: grub 4 inch
     db 3, 4, 4, 2, 1, 4, 4 ;B4: grub 4 inch
     db 3, 4, 4, 2, 1, 4, 4 ;B5: grub 4 inch
+
     db 0, 0, 0, 0, 0, 0, 0 ;B6: pork
     db 0, 0, 0, 0, 0, 0, 0 ;B7: pork
     db 0, 0, 0, 0, 0, 0, 0 ;B8: pork
@@ -676,37 +785,36 @@ lure_ratings:
 }
 
 
-{ ;C1D90B -
+{ : org $C1D90B ;D90B -
 zone_rating:
 
-    .stage_offset:
-        dw .spring, $DE51, $E389, $E8C1, $EDF9, .championship, $E389
+.stage_offset: dw .spring, $DE51, $E389, $E8C1, $EDF9, .championship, $E389
 
 ;-----
 
-    .spring: ..championship:
-        dw ..a0, ..a1, ..a2, $D9A3, $D9C9, $D9EF, $DA0F, $DA39
-        dw $DA51, $DA6D, $DAA3, $DAE1, $DB0F, $DB31, $DB55, $DB91
-        dw $DBB1, $DBCB, $DC3D, $DC83, $DCB5, $DCB9, $DCD1, $DCF5
-        dw $DD25, $DD45, $DD67, $DD87, $DDCD, $DE25, $DE3B
+.spring: .championship:
+    dw ..a0, ..a1, ..a2, $D9A3, $D9C9, $D9EF, $DA0F, $DA39
+    dw $DA51, $DA6D, $DAA3, $DAE1, $DB0F, $DB31, $DB55, $DB91
+    dw $DBB1, $DBCB, $DC3D, $DC83, $DCB5, $DCB9, $DCD1, $DCF5
+    dw $DD25, $DD45, $DD67, $DD87, $DDCD, $DE25, $DE3B
 
-    ..a0: dw ...s0, ...s1, ...s2, ...s3
-        ...s0: dw $0100
-        ...s1: dw $0100
-        ...s2: dw $0200
-        ...s3: dw $0200
+..a0: dw ...s0, ...s1, ...s2, ...s3
+    ...s0: dw $0100
+    ...s1: dw $0100
+    ...s2: dw $0200
+    ...s3: dw $0200
 
-    ..a1: dw ...s0, ...s1, ...s2, ...s3
-        ...s0: dw $0500, $0200, $0300
-        ...s1: dw $0600
-        ...s2: dw $0400, $0600, $0500
-        ...s3: dw $0400, $0500, $0400, $0300, $0300
+..a1: dw ...s0, ...s1, ...s2, ...s3
+    ...s0: dw $0500, $0200, $0300
+    ...s1: dw $0600
+    ...s2: dw $0400, $0600, $0500
+    ...s3: dw $0400, $0500, $0400, $0300, $0300
 
-    ..a2: dw ...s0, ...s1, ...s2, ...s3
-        ...s0: dw $0600, $0500, $0600, $0500
-        ...s1: dw $0400, $0400
-        ...s2: dw $0300
-        ...s3: dw $0300, $0400, $0700
+..a2: dw ...s0, ...s1, ...s2, ...s3
+    ...s0: dw $0600, $0500, $0600, $0500
+    ...s1: dw $0400, $0400
+    ...s2: dw $0300
+    ...s3: dw $0300, $0400, $0700
 
     ;todo
 }
