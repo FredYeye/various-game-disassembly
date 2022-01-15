@@ -13,7 +13,13 @@ hirom
 }
 
 
-;object defines, specifically for the turtle
+;engine defines
+{
+    !rng = $1BE8
+}
+
+
+;object defines
 {
     !state1 = $02 ;main state
     !state2 = $03 ;sub state
@@ -23,6 +29,14 @@ hirom
     !pos_x = $0A
     !pos_y = $0D
 
+;----- defines for modifying another object
+
+    !pos_x2 = $000A
+    !pos_y2 = $000D
+
+;----- specific object defines
+
+    ;turtle boss
     !shoot_counter = $3F
     !land_counter = $40
 }
@@ -44,19 +58,19 @@ _ADF5: ;pick action
 { : org $C02161 ;2161 - 2181
 rng: ;a- x-
     !A16
-    lda $1BE8
+    lda !rng
     asl
     clc
-    adc $1BE8
+    adc !rng
     sta $0000
     !A8
     xba
     clc
-    adc $1BE8
-    sta $1BE8
+    adc !rng
+    sta !rng
     sta $0000
     lda $0001
-    sta $1BE9
+    sta !rng+1
     rtl
 }
 
@@ -64,7 +78,7 @@ rng: ;a- x-
 ;----- C2
 
 
-{ : org $C2932D ;932D - ?
+{ : org $C2932D ;932D - 93A5
 turtle_rise: ;a8 x8
     ldx !state3
     jmp (+,X) : +: dw .init, .run
@@ -116,5 +130,24 @@ turtle_rise: ;a8 x8
     sta !state2
     stz !state3
 .ret:
+    rts
+}
+
+
+{ org $C29BD6 ;9BD6 - 9C02
+create_bubble: ;a8 x8
+    sta $0000   ;bubble type
+    jsl $C0266C ;get slot, x = offset to slot
+    bcs .ret
+
+    lda #$08 : sta $0000,X ;8 means mark this object for creation the next frame
+    lda #$2E : sta $0006,X ;type id?
+    lda $0000 : sta $0007,X ;set bubble type
+    lda $1D : sta $001D,X
+    !A8
+    lda !pos_x+1 : sta !pos_x2+1,X
+    lda !pos_y+1 : sta !pos_y2+1,X
+.ret:
+    !AX8
     rts
 }
