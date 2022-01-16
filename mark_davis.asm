@@ -31,13 +31,30 @@ hirom
 
 ;mark davis defines
 {
+    !fish_catch_timer_list      = $02F8
+    !fish_pos_x_list            = $0358
+    !tackle_pos_x               = $037A
+    !fish_pos_y_list            = $0418
+    !tackle_pos_y               = $043A
+
     !caught_biggest_fish_today  = $0D06
+    !weather                    = $0D0C
     !current_lure               = $0D12
     !current_bait               = $0D13
     !fishes_caught_per_day      = $0D22
     !current_stage              = $0D3C
+    !current_area               = $0D48
+    !current_sub_area           = $0D4A
+    !current_spot               = $0D4C
+
+    !wind_breaker               = $0D52
+    !cap                        = $0D54
+    !glove                      = $0D56
+    !rain_gear                  = $0D58
+
     !competitor_name_list       = $0D66
     !competitor_weight_stage    = $0D7C
+
     !fishing_rating             = $0DA8
     !lure_rating                = $1208
     !fishes_caught_current_zone = $122C
@@ -67,8 +84,7 @@ hirom
 ;10: m.davis
 
 
-;----------
-;----------
+;---------- C0
 
 
 { : org $C008BD ;08BD - 08D5
@@ -247,6 +263,48 @@ _C04EB1: ;calculate lure + bait rating
 
     stz !lure_rating
 ..not_negative:
+    rts
+}
+
+
+{ : org $C057B3 ;57B3 - 57EB
+catch_timer:
+    lda $1230
+    bne .57E8
+
+    lda !current_stage
+    cmp #$0001
+    bne .57C5
+
+    ;stage 2 (summer)
+    lda !cap
+    beq .57E4
+
+.57C5:
+    lda !weather
+    cmp #$0002 ;rain
+    bne .57D2
+
+    lda !rain_gear
+    beq .57E4
+
+.57D2:
+    lda !current_stage
+    cmp #$0003
+    bcc .57E8
+
+    cmp #$0005
+    bcs .57E8
+
+    lda !glove
+    bne .57E8
+
+.57E4:
+    lda #$0009
+    rts
+
+.57E8:
+    lda #$0012
     rts
 }
 
@@ -511,8 +569,7 @@ division: ;unsigned divide of A(16 bit) and X(8 bit)
 }
 
 
-;----------
-;----------
+;---------- C1
 
 
 { : org $C106B0 ;06B0 - 06FF
