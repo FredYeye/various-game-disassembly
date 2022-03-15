@@ -23,6 +23,8 @@ hirom
 
 ;DKC3 defines
 {
+    !animal_transform = $007E ;0000=kongs, 023C=squawks/quawks
+
     !level_id = $00C0
 
     !sky_x_list_offset = $0793 ;for sky effects, anything else?
@@ -150,6 +152,58 @@ _B39BF6: ;changes sky effects
 }
 
 
+;---------- B8
+
+
+{ : org $B88CBD ;8CBD - 8D12
+animal_transform:
+    pha
+    lda !animal_transform
+    beq .8CC6
+
+    lda $7C
+    beq .8CDF
+
+.8CC6:
+    ldx $04FD
+    lda #$0001
+    jsl $BB85A0
+    ldx $04FD
+    jsl $BB85EB
+    ldx $7C
+    beq .8CDF
+
+    jsl $BB85E8
+.8CDF:
+    ldx $04FD
+    jsr $9F20
+    lda $01,S
+    asl #2
+    adc #$0230
+    sta !animal_transform
+    stz $7C
+    ldx $04F9
+    pla
+    clc
+    adc #$0015
+    cmp #$0018
+    bne .8D0A
+
+    tay
+    lda $0777
+    and #$0010
+    beq .8D09
+
+    ldy #$001E ;alternate palette
+.8D09:
+    tya
+.8D0A:
+    jsl $BB85A0
+    jsl $B8ED11
+    rts
+}
+
+
 ;---------- BB
 
 
@@ -162,9 +216,16 @@ _BB97AE:
 ;---------- FD
 
 
-{ : org $FD1998 ;? - ?
-    ;level graphics data/settings?
+{ : org $FD08D8 ;? - ?
+    ;flags used in springin' spiders
+    dw $1480 ; byte 4 not set = squawks
 
+org $FD0D0F
+    ;flags used in buzzer barrage
+    dw $0210 ;byte 4 set = quawks
+
+    ;level graphics data/settings?
+org $FD1998
     ;used in murky mill
     db $05
     db $05
