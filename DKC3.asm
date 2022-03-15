@@ -55,7 +55,7 @@ hirom
 ;---------- B3
 
 
-{ : org $B399C0 ;99C0 - ?
+{ : org $B399C5 ;99C5 - ?
 sky_fade:
 
 .blue_gray:
@@ -78,7 +78,7 @@ sky_fade:
 }
 
 
-{ : org $B39BF6 ;9BF6 - 9C60
+{ : org $B39BF6 ;9BF6 - ?
 _B39BF6:
     lda $15E4
     beq .9C15
@@ -97,11 +97,13 @@ _B39BF6:
     eor #$00FF
     bra .9C20
 
+.9C15:
     inc $15E2
     lda $15E2
     cmp #$0100
     beq .9C61
 
+.9C20:
     lsr #4
     asl
     sta $1A
@@ -117,6 +119,7 @@ _B39BF6:
     clc
     adc #$00A0
     tax
+.9C3B:
     lda $05B9
     cmp #$002D
     bne .9C49
@@ -125,16 +128,24 @@ _B39BF6:
     clc
     adc #$0140
     tax
+.9C49:
     ldy #$000A
     !A8
-    lda #$1B : sta $2121
-    lda $B399C5,X : sta $2122
+    lda #$1B : sta !CGADD
+.9C53:
+    lda sky_fade,X : sta !CGDATA
     inx
     dey
     bpl .9C53
 
     !A16
     rts
+
+.9C61:
+    ;todo
+
+.9C64:
+    ;todo
 }
 
 
