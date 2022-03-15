@@ -44,6 +44,7 @@ hirom
 
 ;level IDs
 {
+    !belcha_s_barn  = $1D
     !lakeside_limbo = $25
     !tidal_trouble  = $27
     !doorstop_dash  = $28
