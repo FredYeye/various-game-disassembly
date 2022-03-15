@@ -79,7 +79,7 @@ sky_fade:
 
 
 { : org $B39BF6 ;9BF6 - ?
-_B39BF6:
+_B39BF6: ;changes sky effects
     lda $15E4
     beq .9C15
 
