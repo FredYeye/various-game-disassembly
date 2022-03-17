@@ -157,7 +157,7 @@ _B39BF6: ;changes sky effects
 breakable_plank_data:
 .lakeside_limbo:
     dw $7C10
-    dw $0690 ;x offset
+    dw $0690 ;x offset where to remove collision
     db $03
     db $01
 
