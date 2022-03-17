@@ -152,6 +152,23 @@ _B39BF6: ;changes sky effects
 }
 
 
+
+{ : org $B3A7C0 ;? - ?
+breakable_plank_data:
+.lakeside_limbo:
+    dw $7C10
+    dw $0690 ;x offset
+    db $03
+    db $01
+
+org $B3A7CC : .tidal_trouble:
+    dw $7D14
+    dw $1EB4
+    db $03
+    db $01
+}
+
+
 ;---------- B8
 
 
