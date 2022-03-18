@@ -34,6 +34,8 @@ hirom
 
     !sky_effect_timer = $15E2
     !sky_effect_type  = $15E8
+
+    !music_test_cursor = $1CCA
 }
 
 
@@ -52,6 +54,7 @@ hirom
     !doorstop_dash  = $28
     !murky_mill     = $2A
     !skidda_s_row   = $2B
+    !buzzer_barrage = $44
 }
 
 
@@ -232,6 +235,13 @@ _BB97AE:
 
 ;---------- FD
 
+
+{ : org $FD06AF ;06AF - ?
+lakeside_limbo_data:
+    dw $0001
+    db $0F ;song to play
+    ;todo
+}
 
 { : org $FD08D8 ;? - ?
     ;flags used in springin' spiders
