@@ -236,14 +236,27 @@ _BB97AE:
 ;---------- FD
 
 
-{ : org $FD06AF ;06AF - ?
+{ : org $FD06AF ;? - ?
 lakeside_limbo_data:
     dw $0001
     db $0F ;song to play
-    ;todo
-}
+    dw .19F0
+    db $00
+    db $01
+    db $02
+    dw $0004
+    db $00
+    dw $0000
+    dw $000A
 
-{ : org $FD08D8 ;? - ?
+    db $00
+    dw $0140
+    dw $0229
+
+    db $00
+    ;todo
+
+org $FD08D8
     ;flags used in springin' spiders
     dw $1480 ; byte 4 not set = squawks
 
@@ -277,6 +290,19 @@ org $FD19DA
     db $0A
     db $08
     dw $0422
+
+org $FD19F0
+.19F0:
+    db $01
+    db $01
+    db $00
+    db $01
+    db $0A
+    db $0A
+    db $01
+    db $01
+    db $09
+    dw $0100
 }
 
 
