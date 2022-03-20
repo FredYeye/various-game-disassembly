@@ -27,6 +27,8 @@ hirom
 
     !level_id = $00C0
 
+    !starting_point = $05B7 ;level starting point index
+
     !sky_x_list_offset = $0793 ;for sky effects, anything else?
 
     !dixie  = $0878
@@ -48,13 +50,23 @@ hirom
 
 ;level IDs
 {
-    !belcha_s_barn  = $1D
-    !lakeside_limbo = $25
-    !tidal_trouble  = $27
-    !doorstop_dash  = $28
-    !murky_mill     = $2A
-    !skidda_s_row   = $2B
-    !buzzer_barrage = $44
+    !belcha_s_barn         = $1D
+    !arich_s_ambush        = $1E
+    !lakeside_limbo        = $25
+    !kreeping_klasps       = $26
+    !tidal_trouble         = $27
+    !doorstop_dash         = $28
+    !squeals_on_wheels     = $29
+    !murky_mill            = $2A
+    !skidda_s_row          = $2B
+    !springin__spiders     = $2F
+    !barrel_shield_bust_up = $30
+    !riverside_race        = $32
+    !bobbing_barrel_brawl  = $34
+    !bazza_s_blockade      = $35
+    !rocket_barrel_ride    = $38
+    !buzzer_barrage        = $44
+    !lakeside_limbo_bonus_1 = $50
 }
 
 
@@ -237,10 +249,12 @@ _BB97AE:
 
 
 { : org $FD06AF ;? - ?
-lakeside_limbo_data:
+level_data:
+
+.lakeside_limbo:
     dw $0001
-    db $0F ;song to play
-    dw .19F0
+    db $0F   ;song to play
+    dw .19F0 ;offset to more data
     db $00
     db $01
     db $02
@@ -249,12 +263,41 @@ lakeside_limbo_data:
     dw $0000
     dw $000A
 
-    db $00
-    dw $0140
-    dw $0229
+    ;first value = flags? bit 2: initial facing
+    ;2nd & 3rd: xy starting pos
+    db $00 : dw $0140, $0229 ;start
+    db $00 : dw $0D00, $01F8 ;checkpoint
+    db $40 : dw $0870, $0178 ;bonus 1
+    db $40 : dw $1250, $0188 ;bonus 2
+    db $00 : dw $1880, $0200 ;warp barrel
+    db $00 : dw $0800, $0209 ;demo
+    db $FF                   ;start pos list terminator
 
+    dw $0250, $0351 ;?
+    dw $FFFF, $FFFF ;terminator?
+
+.kreeping_klasps:
+    dw $0001
+    db $0F
+    dw .19F0
+    db $01
+    db $62
+    db $02
+    dw $0003
     db $00
-    ;todo
+    dw $0000
+    dw $000A
+
+    db $00 : dw $0150, $0269
+    db $00 : dw $1270, $0228
+    db $40 : dw $0BB0, $01D0
+    db $40 : dw $1850, $01A8
+    db $00 : dw $2690, $0228
+    db $00 : dw $0680, $0200
+    db $FF
+
+    dw $0268, $0369
+    dw $FFFF, $FFFF
 
 org $FD08D8
     ;flags used in springin' spiders
