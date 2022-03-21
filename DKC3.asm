@@ -29,6 +29,8 @@ hirom
 
     !starting_point = $05B7 ;level starting point index
 
+    !connected_levels = $0785
+
     !sky_x_list_offset = $0793 ;for sky effects, anything else?
 
     !dixie  = $0878
@@ -252,9 +254,9 @@ _BB97AE:
 level_data:
 
 .lakeside_limbo:
-    dw $0001
+    dw $0001 ;level type?
     db $0F   ;song to play
-    dw .19F0 ;offset to more data
+    dw .19F0 ;offset to shared level data
     db $00
     db $01
     db $02
@@ -273,8 +275,10 @@ level_data:
     db $00 : dw $0800, $0209 ;demo
     db $FF                   ;start pos list terminator
 
-    dw $0250, $0351 ;?
-    dw $FFFF, $FFFF ;terminator?
+    db $02, $50, $03, $51 ;connected levels
+    dw $FFFF ;connection terminator?
+
+    dw $FFFF ;terminator?
 
 .kreeping_klasps:
     dw $0001
@@ -296,8 +300,10 @@ level_data:
     db $00 : dw $0680, $0200
     db $FF
 
-    dw $0268, $0369
-    dw $FFFF, $FFFF
+    db $02, $68, $03, $69
+    dw $FFFF
+
+    dw $FFFF
 
 org $FD08D8
     ;flags used in springin' spiders
