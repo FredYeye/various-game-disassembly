@@ -243,13 +243,13 @@ org $B3A7CC : .tidal_trouble:
 
 
 { : org $B78012 ;? - ?
-_B78012: ;DMA preparations?
+_B78012:
     jmp _B78036
 }
 
 
 { : org $B78036 ;? - 808C
-_B78036:
+_B78036: ;DMA preparations?
     phx
     ldx $155E
     sta $1564,X
