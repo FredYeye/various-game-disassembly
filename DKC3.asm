@@ -40,6 +40,8 @@ hirom
     !sky_effect_type  = $15E8
 
     !music_test_cursor = $1CCA
+
+    !tilemap = $7F0000
 }
 
 
@@ -169,20 +171,123 @@ _B39BF6: ;changes sky effects
 }
 
 
+{ : org $B3A6F7 ;A6F7 - ?
+_B3A6F7: ;breakable plank
+    lda $15E6 ;plank ID + 1
+    beq .A75E
+
+    dec
+    asl
+    sta $1A
+    asl
+    clc
+    adc $1A
+    tax ;x = plank ID * 6
+    lda.l breakable_plank_data+4,X : and #$FF00 ;check if tile ID(?) is 0
+    beq .A75F
+
+    lsr #3
+    clc
+    adc $1967
+    sta $1A
+    lda $8E    : sta $1C
+    lda #$0008 : sta $1D
+    lda.l breakable_plank_data+4,X : and #$00FF : tay ;count
+    lda.l breakable_plank_data+0,X ;?
+.A72C:
+    sta $20
+    jsl _B78012
+    bcs .A75E
+
+    lda $1A : clc : adc #$0008 : sta $1A
+    lda $20
+    clc
+    adc #$0020
+    dey
+    bne .A72C
+
+    stz $15E6
+    lda.l breakable_plank_data+2,X ;offset
+    clc
+    adc $8C
+    sta $1A
+    lda $8E : sta $1C
+    lda.l breakable_plank_data+5,X : and #$00FF ;tile ID?
+    sta [$1A]
+.A75E:
+    rts
+
+.A75F:
+    ;if tile is 0
+}
+
 
 { : org $B3A7C0 ;? - ?
 breakable_plank_data:
+
 .lakeside_limbo:
-    dw $7C10
-    dw $0690 ;x offset where to remove collision
-    db $03
-    db $01
+    dw $7C10 ;VRAM address (modifies VRAM $7C10 * 2 = $F820)
+    dw $0690 ;offset to tile in tilemap to break
+    db $03   ;count of VRAM tiles to modify
+    db $01   ;tile ID?
 
 org $B3A7CC : .tidal_trouble:
     dw $7D14
     dw $1EB4
     db $03
     db $01
+}
+
+
+;---------- B7
+
+
+{ : org $B78012 ;? - ?
+_B78012: ;DMA preparations?
+    jmp _B78036
+}
+
+
+{ : org $B78036 ;? - 808C
+_B78036:
+    phx
+    ldx $155E
+    sta $1564,X
+    lda $1D
+    bra .8054
+
+.8041:
+    phx
+    ldx $155E
+    asl #4
+    sta $1564,X
+    lda $1C
+    and #$FF00
+    lsr #3
+.8054:
+    sta $1562,X
+    adc #$0032
+    adc $1560
+    cmp $80
+    bcs .808B
+
+    sta $1560
+    lda $1A : sta $1566,X
+    lda $1C : and #$00FF : ora #$8000 : sta $1568,X
+    txa
+    clc
+    adc #$0008
+    sta $155E
+    tax
+    stz $1568,X
+    cpx #$0070
+    bcc .808B
+
+    lda $80 : sta $1560
+    clc
+.808B:
+    plx
+    rtl
 }
 
 
