@@ -49,6 +49,8 @@ hirom
 {
     !pos_x = $11
     !pos_y = $15
+	
+	!obj_size = $6E
 }
 
 
@@ -236,6 +238,93 @@ org $B3A7CC : .tidal_trouble:
     dw $1EB4
     db $03
     db $01
+}
+
+
+;---------- B6
+
+
+{ : org $B6D940 ;? - ?
+    ;part of one of squirt's mouth functions
+    lda $0010,Y
+    phy
+    sta $1A
+    lda $12,X
+    ldy $04F9
+    cmp $0012,Y
+    lda $1A
+    bcs .D956
+
+    eor #$FFFF
+    inc
+.D956:
+    ply
+    sta $2A,X              ;angle change to water direction
+    lda #$8000 : sta $60,X ;initial water direction
+}
+
+
+{ : org $B6DFA1 ;DFA1 - DFF8
+squirt_data:
+	dw .phase4, .phase3, .phase2, .phase1
+
+.phase1:
+	db $04 ;show/hide wait timer
+	db $04 ;show/hide eyes transition speed/timer
+	db $00, $01
+	db $04 ;close mouth wait timer
+	db $04 ;close mouth transition speed/timer
+	db $00, $01
+	dw $01F0 ;water shoot timer
+	dw $00C8 ;eyes out timer
+	dw $0019 ;eyes hidden timer
+	dw $001E ;hide mouth wait timer
+	dw $0080 ;angle change
+	db $03, $03
+
+.phase2:
+	db $04
+	db $04
+	db $00, $01
+	db $04
+	db $04
+	db $00, $01
+	dw $02F0
+	dw $00B4
+	dw $0019
+	dw $001E
+	dw $00B0
+	db $03, $03
+
+.phase3:
+	db $04
+	db $04
+	db $00, $01
+	db $04
+	db $04
+	db $00, $01
+	dw $0250
+	dw $00A0
+	dw $0019
+	dw $001E
+	dw $00E0
+	db $03, $03
+
+.phase4:
+    db $04
+	db $04
+	db $00, $01
+	db $04
+	db $04
+	db $00, $01
+	dw $0250
+	dw $00A0
+	db $0019
+	dw $001E
+	dw $00E0
+	db $03, $03
+
+
 }
 
 
