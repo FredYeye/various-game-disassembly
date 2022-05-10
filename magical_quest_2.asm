@@ -135,7 +135,7 @@ turtle_rise: ;a8 x8
 }
 
 
-{ org $C29BD6 ;9BD6 - 9C02
+{ : org $C29BD6 ;9BD6 - 9C02
 create_bubble: ;a8 x8
     sta $0000   ;bubble type
     jsl $C0266C ;get slot, x = offset to slot

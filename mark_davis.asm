@@ -271,7 +271,7 @@ _C04EB1: ;calculate lure + bait rating
 { : org $C057B3 ;57B3 - 57EB
 catch_timer:
     lda $1230
-    bne .57E8
+    bne .long_timer
 
     lda !current_stage
     cmp #$0001
@@ -279,32 +279,32 @@ catch_timer:
 
     ;stage 2 (summer)
     lda !cap
-    beq .57E4
+    beq .short_timer ;short timer if not wearing cap in summer
 
 .57C5:
     lda !weather
     cmp #$0002 ;rain
-    bne .57D2
+    bne .no_rain
 
     lda !rain_gear
-    beq .57E4
+    beq .short_timer
 
-.57D2:
+.no_rain:
     lda !current_stage
     cmp #$0003
-    bcc .57E8
+    bcc .long_timer
 
     cmp #$0005
-    bcs .57E8
+    bcs .long_timer
 
     lda !glove
-    bne .57E8
+    bne .long_timer
 
-.57E4:
+.short_timer:
     lda #$0009
     rts
 
-.57E8:
+.long_timer:
     lda #$0012
     rts
 }
@@ -315,7 +315,8 @@ _C058BE: ;got fish on hook
     lda !area_rating
     clc : adc !lure_rating
     sta !fishing_rating
-    lda $1052 : cmp #$0001
+    lda $1052
+    cmp #$0001
     bne .58DF ;jump if player isn't holding X (maybe other conditions too, not sure)
 
     lda !fishing_rating
@@ -373,13 +374,16 @@ _C058BE: ;got fish on hook
     brl .5992
 
 .594C:
-    lda !fishes_caught_current_zone : cmp #$0002
+    lda !fishes_caught_current_zone
+    cmp #$0002
     bcs .593F
 
-    lda !fishes_caught_per_day : cmp #$0003
+    lda !fishes_caught_per_day
+    cmp #$0003
     bcs .593F
 
-    lda !fishing_rating : cmp #$0010
+    lda !fishing_rating
+    cmp #$0010
     bcc .5975
 
     lda !caught_biggest_fish_today
@@ -390,7 +394,8 @@ _C058BE: ;got fish on hook
     brl .5992
 
 .5975:
-    lda !fishing_rating : cmp #$000F
+    lda !fishing_rating
+    cmp #$000F
     bcc .5989
 
 ;second fish
@@ -537,6 +542,113 @@ division: ;unsigned divide of A(16 bit) and X(8 bit)
 }
 
 
+{ : org $C05D9E ;5D9E - 5DDA
+_C05D9E:
+    asl #2
+    sta $00
+    jsr rng
+    and #$0006
+    clc : adc $00
+    tax
+    lda _C11103,X : sta $00
+    bra .5DC8
+
+    ;todo
+
+.5DC8:
+    jsr rng
+    and #$001E
+    tax
+    lda _C12E9E,X
+    and $00 ;and bitmasks
+    beq .5DD9
+
+    sec
+    rts
+
+.5DD9:
+    clc
+    rts
+}
+
+
+{ : org $C06052 ;6052 - 60D7
+_C06052:
+    lda $1400
+    bne .60B9
+
+    lda $3A
+    bne .6080
+
+    lda $1214
+    bne .60B6
+
+    jsr $6033
+    bcc .60B9
+
+    ;fish jumps out of water
+    inc $3A
+    lda #$0015 : ldx #$0006 : jsr $0E23
+    lda #$001C
+    jsr $07D6
+    sec
+    rts
+
+    ;todo
+
+org $C06080 : .6080:
+    lda $1400
+    bpl .60BB
+
+    ;todo
+
+.60B4:
+    sec
+    rts
+
+.60B6:
+    dec $1214
+.60B9:
+    clc
+    rts
+
+.60BB:
+    lda $06A6
+    cmp #$0003
+    bne .60B4
+
+    lda $0706
+    dec
+    bne .60B4
+
+    lda #$0000
+    jsr _C05D9E
+    bcc .60B4
+
+    lda #$0999 : sta $1054 ;break line
+    rts
+}
+
+
+{ ;60D8 - 60EB
+_C060D8: ;picking up the fish
+  lda $1400
+  bne .60EA
+
+  jsr rng
+  and #$000F
+  cmp #$0008
+  bne .60EA
+
+  sec ;drop fish
+  rts
+
+.60EA:
+  clc ;keep fish
+  rts
+}
+
+
 { : org $C06DFF ;6DFF - 6E51
     lda !current_stage : asl : tax ;x = current stage * 2
     lda zone_rating_stage_offset,X : sta $00 ;$00 = --xxxx, xxxx = stage offset
@@ -552,10 +664,12 @@ division: ;unsigned divide of A(16 bit) and X(8 bit)
     lda !areas_visited
     beq .6E49
 
-    lda !areas_visited : cmp $04
+    lda !areas_visited
+    cmp $04
     beq .6E45
 
-    lda $06 : cmp !area_rating
+    lda $06
+    cmp !area_rating
     bpl .6E45
 
     sta !area_rating
@@ -566,6 +680,91 @@ division: ;unsigned divide of A(16 bit) and X(8 bit)
 .6E49:
     lda $06 : sta !area_rating
     inc !areas_visited
+    rts
+}
+
+
+{ : org $C0BF7E ;? - ?
+_C0BF7E: ;reeling in fish
+    jsr $4FA3
+    jsr _C06052
+    bcc .BFC7
+
+    lda $1054
+    cmp #$0999
+    beq .BF9E
+
+    cmp #$0005
+    bpl .BF9E
+
+    lda $1052
+    bne .BFC7
+
+    ldx #$0006
+    jmp $0EBD
+
+.BF9E: ;break line
+    stz $0226
+    lda #$001A
+    jsr $07D6
+    jsr $5BD3
+    lda #$0065
+    ldy $10E4
+    beq .BFB5
+
+    lda #$0066
+.BFB5:
+    ldx #$0002
+    jsr $0E23
+    lda #$00B4
+    sta $1000
+    lda #$0029
+    sta $38
+    rts
+
+.BFC7:
+    lda $50
+    bit #$0400
+    beq .C030
+
+    lda $03A6
+    clc : adc $0526
+    sta $03A6
+
+    lda $0346
+    adc $04C6
+    sta $0346
+
+    lda $03DA
+    sec : sbc #$4000
+    sta $03DA
+
+    lda $037A
+    sbc #$0000
+    sta $037A
+
+    cmp #$0014
+    bmi .C03C
+
+    lda $10E4
+    bne .C003
+
+    jsr $4E0B
+    bra .C016
+
+org $C0C003 : .C003:
+    ;todo
+org $C0C016 : .C016:
+    ;todo
+org $C0C030 : .C030:
+    ;todo
+org $C0C03C : .C03C: ;reeled in the fish
+    stz $0226
+    lda #$0004
+    jsr $562A
+    stz $1052
+    inc $38
+    inc $38
     rts
 }
 
@@ -593,6 +792,14 @@ weight_variance:
 }
 
 
+{ : org $C11103 ;1103 - ?
+_C11103: ;bitmasks
+    dw $0000, $0000, $0008, $0220
+
+    dw $4028, $1104
+}
+
+
 { : org $C117D2 ;17D2 - 186B
 competitor_weights: ;base weights for the competition
     dw .spring, .summer, .fall, .winter1, .winter2, .championship, .1858
@@ -604,6 +811,13 @@ competitor_weights: ;base weights for the competition
 .winter2:      dw $1200, $1164, $1068, $0972, $0864, $0792, $0690, $0564, $0522, $0489
 .championship: dw $1650, $1608, $1506, $1482, $1464, $1362, $1200, $1158, $1101, $1029
 .1858:         dw $0735, $0728, $0711, $0703, $0691, $0687, $0674, $0669, $0652, $0645
+}
+
+
+{ : org $C12E9E ;2E9E - 2EBD
+_C12E9E: ;bitmasks
+    dw $0001, $0002, $0004, $0008, $0010, $0020, $0040, $0080
+    dw $0100, $0200, $0400, $0800, $1000, $2000, $4000, $8000
 }
 
 

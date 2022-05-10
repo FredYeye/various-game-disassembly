@@ -27,6 +27,8 @@ hirom
 
     !level_id = $00C0
 
+	!flags_05AF = $05AF ;bitfield of unknown length (32?) | 05B0:6 = two kongs available
+	!active_kong = $05B5 ;0=dixie, 1=kiddie
     !starting_point = $05B7 ;level starting point index
 
     !connected_levels = $0785
@@ -35,6 +37,11 @@ hirom
 
     !dixie  = $0878
     !kiddie = $08E6
+
+	!invuln_flicker_timer_dixie = $1494
+	!invuln_timer_dixie = $1496
+	!invuln_flicker_timer_kiddie = $14E6
+	!invuln_timer_kiddie = $14E8
 
     !sky_effect_timer = $15E2
     !sky_effect_type  = $15E8
@@ -58,6 +65,7 @@ hirom
 {
     !belcha_s_barn         = $1D
     !arich_s_ambush        = $1E
+	!squirt_s_showdown     = $1F
     !lakeside_limbo        = $25
     !kreeping_klasps       = $26
     !tidal_trouble         = $27
@@ -548,6 +556,13 @@ org $FD19F0
     dw $0100
 }
 
+
+{ : org $FD2B44 ;? - ?
+	;these two values are used at least in barrel shield bust-up (2-1)
+	db $44 ;backdrop(G) intensity
+org $FD2B47
+	db $24 ;backdrop(R) intensity
+}
 
 ;---------- FF
 
