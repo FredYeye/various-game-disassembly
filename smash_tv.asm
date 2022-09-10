@@ -9,7 +9,7 @@ lorom
     !item_drop_timer  = $05AE
     !money_drop_timer = $05AF
     !room_complete    = $05D3
-    !room_exit_timer  = $05D4 ;time until opening doors, then until homing blades spawn upon completing a room
+    !room_exit_timer  = $05D4 ;time until opening doors, then also until homing blades spawn upon completing a room
 
     !enemy_counter = $06C6
 
@@ -17,6 +17,25 @@ lorom
     !y_pos_list = $0C9C
 
     !item_timer_list = $134A
+
+    ; $18C5 some kind of active enemy list. separates grunts by color but they're not stored in the same slot always
+
+    !grunt_active = $18E4
+    !mr_shrapnel_active = $18EC
+
+    !waves_allowed_remaining = $18FF
+    !waves_remaining         = $1900
+
+    !wave_type              = $1902
+    !wave_count             = $1909
+    !wave_count2            = $1910
+    !wave_spawn_limit       = $1917
+    !wave_flags             = $191E ;not sure what this is
+    !wave_cooldown          = $1925
+    !wave_cooldown2         = $192C
+    !wave_pre_spawned       = $1933
+    !wave_spawn_timer       = $193A
+    !wave_spawn_timer2      = $1941
 }
 
 
@@ -24,18 +43,19 @@ lorom
 {
     !grunt = $01
     !wall_gunner = $02
-    !tank = $08
-    !mr_shrapnel = $0A
-    !mine = $0F
-
     ; 3 = worm
     ; 4 = big red flying enemy (arena 2)
     ; 5 = snakes
     ; 6 = snake man
     ; 7 = laser orb
-    ; 9 = red cluster
+    !tank = $08
+	; 9 = red cluster
+    !mr_shrapnel = $0A
     ; B = blue worm, single segment
     ; C = purple/red homing thing
+
+
+    !mine = $0F
 }
 
 
@@ -43,7 +63,63 @@ lorom
 
 
 { : org $00C1CE ;C1CE - C249
-    ;load level data
+_00C1CE: ;load level data
+    lda #$02 : pha : plb
+    lda !current_circuit : asl : tax
+    lda.w level_data+0,X : sta $04
+    lda.w level_data+1,X : sta $05
+    lda !current_arena : asl : tay
+    lda ($04),Y : sta $12
+    iny
+    lda ($04),Y : sta $13 ;$12 = offset to level data
+    ldy #$00
+    lda ($12),Y : sta $10 ;wave count
+.C1F5:
+    inc !waves_remaining
+    ldx $10
+    iny
+    lda ($12),Y : sta !wave_type,X
+    iny
+    lda ($12),Y : sta !wave_count,X
+    iny
+    lda ($12),Y : sta !wave_count2,X ;upper byte
+    iny
+    lda ($12),Y : sta !wave_spawn_limit,X
+    iny
+    lda ($12),Y : sta !wave_flags,X ;flags/subtype?
+    iny
+    lda ($12),Y : sta !wave_cooldown,X ;next wave timer
+    iny
+    lda ($12),Y : sta !wave_cooldown2,X ;upper byte
+    iny
+    lda ($12),Y : sta !wave_pre_spawned,X
+    iny
+    lda ($12),Y : sta !wave_spawn_timer,X
+    iny
+    lda ($12),Y : sta !wave_spawn_timer2,X ;upper byte
+    sty $11
+    jsr _00C355
+    ldy $11
+    dec $10
+    bpl .C1F5
+
+    iny
+    lda ($12),Y : sta !wave_allowed_remaining
+    plb
+    plp
+    rts
+}
+
+
+{ : org $00C355 ;C355 - ?
+_003355:
+    lda !wave_type,X : asl : tax
+    jmp (+,X) : +: dw .grunt, .tank
+
+;-----
+
+.grunt:
+.tank:
 }
 
 
@@ -77,11 +153,11 @@ level_data:
 ;-----
 
 .arena_1:
-    db $01    ;enemy list count
+    db $01    ;wave count
 
     db !grunt ;type
     dw $0064  ;count
-    db $09    ;active spawn limit
+    db $09    ;spawn limit
     db $00    ;setting this above 0 spawns purple guys
     dw $0012  ;timer before next wave is allowed to spawn
     db $04    ;enemies already spawned on entering room
@@ -95,11 +171,11 @@ level_data:
     db $00
     dw $0F78
 
-    db $01    ;?
+    db $01    ;waves allowed to remain and still beat the room? think it depends on enemy type
 
 .B67A: ;unused?
     db $04
-    
+
     db !grunt
     dw $012C
     db $0A
@@ -123,7 +199,7 @@ level_data:
     dw $0000
     db $05
     dw $0003
-    
+
     db !wall_gunner
     dw $0001
     db $01
@@ -131,7 +207,7 @@ level_data:
     dw $0000
     db $01
     dw $0003
-    
+
     db !tank
     dw $0005
     db $01
@@ -139,7 +215,7 @@ level_data:
     dw $010E
     db $00
     dw $1428
-    
+
     db $02
 
 .collect_powerups:
@@ -160,7 +236,7 @@ level_data:
     dw $01E0
     db $00
     dw $0096
-    
+
     db !mine
     dw $0003
     db $03

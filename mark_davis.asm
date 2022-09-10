@@ -632,7 +632,7 @@ org $C06080 : .6080:
 
 { ;60D8 - 60EB
 _C060D8: ;picking up the fish
-  lda $1400
+  lda $1400 ;demo playing check?
   bne .60EA
 
   jsr rng
