@@ -25,9 +25,9 @@ lorom
 {
     ;00: Storehouse | piercia defeated
     ;08: Storehouse | dynamite picked up
+    ;10: Hujia      | talked to randy about how to clear the pass
+    ;11: Hujia      | talked to the formidable woman before talking to randy
     ;12: Hujia      | received map from the formidable woman
-    ;16: Hujia      | talked to randy about how to clear the pass
-    ;17: Hujia      | talked to the formidable woman before talking to randy
     ;2C: Hujia      | talked to tylon and received the key
     ;41: Map        | warp A
     ;42: Map        | warp B
@@ -51,7 +51,7 @@ lorom
 ;---------- 00
 
 
-{ : org $80B174 ;B174 - B198
+{ : org $80B174 ;B174 - B1AA
 _80B174:
     !A16
     lda $02
@@ -69,6 +69,17 @@ _80B174:
     lda !event_flags+8
     ora $0390
     sta !event_flags+8 ;store "warp activated" bit
+    rts
+
+.B199:
+    lda $038B
+    bne .B1A3
+    lda #$03
+    sta $038B
+.B1A3:
+    !A16
+    and #$00FF
+    !A8
     rts
 }
 
