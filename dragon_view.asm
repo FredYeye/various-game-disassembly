@@ -23,27 +23,60 @@ lorom
 
 ;event list
 {
-    ;00: piercia defeated
-    ;08: dynamite picked up
-    ;12: received map from the formidable woman
-    ;16: talked to randy about how to clear the pass
-    ;17: talked to the formidable woman before talking to randy
-    ;2C: talked to tylon and received the key
-    ;4D: gave dynamite to tylon
-    ;4F: said "Clear the Pass!" to the formidable woman
-    ;51: tylon talked to you after returning from the store
-    ;56: said "Not your concern!" to the formidable woman
-    ;77: entered store after giving dynamite to tylon
-    ;A4: Storehouse door 2 unlocked
-    ;B8: opened Storehouse armor chest
-    ;E3: Storehouse door unlocked
+    ;00: Storehouse | piercia defeated
+    ;08: Storehouse | dynamite picked up
+    ;12: Hujia      | received map from the formidable woman
+    ;16: Hujia      | talked to randy about how to clear the pass
+    ;17: Hujia      | talked to the formidable woman before talking to randy
+    ;2C: Hujia      | talked to tylon and received the key
+    ;41: Map        | warp A
+    ;42: Map        | warp B
+    ;4D: Hujia      | gave dynamite to tylon
+    ;4F: Hujia      | said "Clear the Pass!" to the formidable woman
+    ;51: Hujia      | tylon talked to you after returning from the store
+    ;56: Hujia      | said "Not your concern!" to the formidable woman
+    ;5D:            | sword technique
+    ;77: Hujia      | entered store after giving dynamite to tylon
+    ;8B: Wet Cavern | started the "100 demons killed" quest
+    ;8D: North Cave | Bow chest
+    ;A4: Storehouse | door 2 unlocked
+    ;A5: Wet Cavern | 1000 jade chest
+    ;AA: Fall       | Lightning ring chest
+    ;B8: Storehouse | armor chest
+    ;DA: Galys pass | hp up
+    ;E3: Storehouse | door unlocked
+}
+
+
+;---------- 00
+
+
+{ : org $80B174 ;B174 - B198
+_80B174:
+    !A16
+    lda $02
+    sec
+    sbc #$0060
+    cmp #$002A
+    bcc .B1A3
+
+    and #$00FF
+    !A8
+    lda $038E
+    cmp #$02
+    beq .B199
+
+    lda !event_flags+8
+    ora $0390
+    sta !event_flags+8 ;store "warp activated" bit
+    rts
 }
 
 
 ;---------- 12
 
 
-{ : org $92D7E0 ; D7E0 - D7EF
+{ : org $92D7E0 ;D7E0 - D7EF
 bit_flags: dw $01, $02, $04, $08, $10, $20, $40, $80
 }
 
