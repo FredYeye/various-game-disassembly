@@ -19,15 +19,39 @@ lorom
     !event_flags = $7E2000
     ;$7E2040 = temp events, like cleared rooms etc
 
-    ;$6F9D = x pos (2D)
-    ;$6FCA = current hp
-    ;$6FCB = max hp
+    !items = $7E2100 ;item count / level etc
+    !fire_ring_level = $7E210A ;210B is also related to the fire ring, not sure what it is
+    !sword_level = $7E211A
+    !hauza_level = $7E211C
+    !armor_level = $7E2120
+    !equipped_item = $7E212E
+
+    !level = $7E7094
+    !xp = $7E7095
 
     !attack_power = $98E9
     !weapon_technique_active = $98EB
     !hauza_technique_timer = $A32D
 
     !golden_sandworm_encounter_count = $7EE7AE
+}
+
+
+;object defines
+{
+    ;obj size = $100
+    !obj_id         = $7E6F9A
+    !obj_pos_x      = $7E6F9D
+    !obj_attack     = $7E6FC6
+    !obj_defense    = $7E6FC8
+    !obj_hp_current = $7E6FCA
+    !obj_hp_max     = $7E6FCB
+
+    ;00 = lizard knight (green)
+    ;02 = beetle (blue)
+    ;05 = scorpion (orange)
+    ;10 = slime (blue)
+    ;33 = frozen horror (pillar thing?)
 }
 
 
@@ -227,6 +251,115 @@ _80B174:
 }
 
 
+{ : org $80ECE9 ;ECE9 - ED36
+add_xp:
+    lda !level
+    cmp #$2E ;max level is 2D... hmm
+    bcc .ECF2
+
+    rtl
+
+.ECF2:
+    phy
+    lda #$FF
+    sta $7EE7B3
+    lda !obj_id,X
+    !A16
+    asl
+    tax
+    lda $44
+    and #$00FF
+    cmp #$0001
+    bne .ED18
+
+    lda enemy_xp,X
+    lsr #2
+    clc
+    adc enemy_xp,X ;increase xp by 25% if $44 = 01 (overworld enemy)
+    bra .ED1C
+
+.ED18:
+    lda enemy_xp,X
+.ED1C:
+    clc
+    adc !xp
+    sta !xp
+    lda #$0000
+    adc !xp+2
+    sta !xp+2
+    and #$00FF
+    !A8
+    ply
+    rtl
+}
+
+
+{ ;ED37 - EDD5
+_80ED37: ;xp requirement
+    phx
+    ldy #$0001
+    lda !level
+    cmp #$22
+    bcc .ED50
+
+    ;level 35 and above
+    pha
+    sec
+    sbc #$20
+    tay
+    pla
+    cmp #$2C
+    bcc .ED50
+
+    ;level 45
+    ldy #$000D
+.ED50:
+    !A16
+    asl
+    tax
+    stz $02
+    lda $80ED7C,X
+    asl
+    rol $02
+    dey
+    beq .ED73
+
+.ED60:
+    clc
+    adc $80ED7C,X
+    sta $00
+    lda $02
+    adc #$0000
+    sta $02
+    lda $00
+    dey
+    bne .ED60
+
+.ED73:
+    sta $00
+    and #$00FF
+    !A8
+    plx
+    rtl
+
+.ED7C:
+    dw $0004, $000D, $0020, $003E, $006C, $00AB, $0100, $016C, $01F4, $0299, $0360, $044A
+    dw $055C, $0697, $0800, $0998, $0B64, $0D65, $0FA0, $1216, $14CC, $17C3, $1B00, $1E84
+    dw $2254, $2671, $2AE0, $2FA2, $34BC, $3A2F, $4000, $4630, $4CC4, $53BD, $5B20, $62EE
+    dw $6B2C, $73DB, $7D00, $869C, $90B4, $9B49, $A660, $B1FA, $BE1C
+}
+
+
+{ ;EDD6 - ?
+enemy_xp:
+    dw $0006
+    dw $0017
+    dw $0002 ;beetle (blue)
+    dw $0007
+    dw $0003
+    dw $0005 ;scorpion (orange)
+
+}
 ;---------- 01
 
 
@@ -271,7 +404,7 @@ _8189F3: ;dealing damage to enemy
 .8A2C:
     lda #$00
     sta $7088,Y
-    lda $7E212E
+    lda !equipped_item
     cmp #!fire_ring
     beq .8A42
 
@@ -290,14 +423,14 @@ _8189F3: ;dealing damage to enemy
     lda $81BEA0,X : sta $00
     lda $81BEA1,X : sta $01
     lda $81BEA2,X : sta $02
-    lda $6F9A,Y
+    lda.w !obj_id,Y
     tay
     lda [$00],Y
     sta $08
     lda $7E9B29
     tax
     lda $81BE97,X : sta $06
-    jsr $A3AA
+    jsr multiply
     ldy $DB
     lda $0A
     inc
@@ -312,6 +445,73 @@ _8189F3: ;dealing damage to enemy
 .8A80:
     sta $6FCA,Y ;enemy hp
     rts
+}
+
+
+{ : org $81A3AA ;A3AA - A3D2
+multiply: ;$0A = $06 * $08
+    stz $0A
+    stz $0B
+    lda $06
+    beq .A3D2
+
+    lda $08
+    beq .A3D2
+
+    stz $07
+    !A16
+    ldy #$0008
+.A3BD:
+    lsr $08
+    bcc .A3C8
+
+    lda $0A
+    clc
+    adc $06
+    sta $0A
+.A3C8:
+    asl $06
+    dey
+    bne .A3BD
+
+    lda #$0000
+    !A8
+.A3D2:
+    rts
+}
+
+
+{ ;? - ?
+org $81BE97 ;ring damage multiplier
+db 1, 2, 4 ;ice ring
+db 2, 3, 4 ;fire ring
+db 1, 2, 4 ;lightning ring
+
+;damage?
+org $81BEC0 : fire_ring_table:
+    ;    0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
+    db $0A, $14, $0A, $0A, $14, $0A, $05, $01, $14, $12, $0A, $0F, $01, $05, $01, $0A
+    db $0C, $05, $0C, $03, $0F, $05, $07, $0A, $02, $0F, $0A, $07, $01, $0A, $0F, $0A
+    db $14, $0A, $0A, $05, $0A, $0C, $05, $0A, $0A, $08, $01, $02, $01, $0A, $0A, $00
+    db $0A, $00, $0A, $0A, $02, $08, $0A, $0A, $00, $0A, $0A, $0A, $0A, $0A, $0A, $0A
+    db $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A
+    db $00, $0A, $0A
+
+org $81BF13 : ice_ring_table:
+    db $0A, $0A, $0A, $08, $0A, $0A, $0F, $14, $01, $02, $0A, $0A, $01, $11, $01, $14
+    db $0A, $05, $0A, $03, $0C, $05, $07, $06, $14, $05, $0A, $0F, $01, $0A, $08, $08
+    db $0A, $0A, $0A, $05, $08, $0A, $05, $0A, $0A, $06, $01, $02, $14, $0A, $0A, $0A
+    db $0A, $0A, $00, $00, $02, $00, $0A, $0A, $00, $0A, $0A, $0A, $0A, $0A, $0A, $0A
+    db $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A
+    db $0A, $0A, $05
+
+org $81BF66 : lightning_ring_table:
+    db $0A, $0A, $0A, $0F, $0A, $0A, $0A, $0A, $0A, $0C, $0A, $0E, $01, $0A, $01, $0A
+    db $0A, $05, $0A, $0C, $0F, $0F, $0A, $08, $0A, $0A, $0A, $0A, $01, $0A, $0A, $0A
+    db $0A, $0A, $0A, $05, $0A, $0B, $08, $0A, $0A, $08, $0A, $0A, $02, $0A, $0A, $05
+    db $0A, $05, $05, $05, $02, $05, $0A, $0A, $00, $0A, $0A, $0A, $0A, $0A, $0A, $0A
+    db $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A
+    db $05, $0A, $05
 }
 
 
@@ -363,6 +563,33 @@ _92DA67:
     sta !event_flags,X ;store flag bit
     !A16
     rts
+}
+
+
+;---------- 17
+
+
+{ : org $97809F ;809F - 80C0
+hauza_set_damage:
+    phx
+    !A16
+    lda !hauza_damage
+    and #$00FF
+    tax
+    !A16
+    and #$00FF
+    !A8
+    lda $9780BB,X
+    plx
+    sta $7E6FC6,X
+    rtl
+
+hauza_damage: db 00, 20, 30, 40, 50, 60
+}
+
+
+{ ;? - ?
+org $9780DD : sword_damage: db 00, 15, 25, 35, 45, 55
 }
 
 
