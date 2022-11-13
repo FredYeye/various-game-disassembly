@@ -28,7 +28,7 @@ _00DC08:
     beq.b   .DC76
 
     move.b  D0, D2
-    lea.l   0xDC90.l, A6
+    lea     0xDC90.l, A6
     andi.w  #0x07, D2
     add.b   (0, A6, D2.w), D1
     move.b  D0, D2

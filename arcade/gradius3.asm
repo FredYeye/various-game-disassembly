@@ -28,7 +28,7 @@ _02198C:
 .19C4:
     move.b  0x10106C.l, D0
     andi.w  #0x0F, D0
-    lea.l   0x21A36.l, A6
+    lea     0x21A36.l, A6
     add.b   (0, A6, D0.w), D1
     tst.b   0x101F60.l
     bpl.b   .19E2
@@ -37,7 +37,7 @@ _02198C:
 .19E2:
     move.w  0x101014.l, D0
     subq.w  #3, D0
-    lea.l   0x21A46.l, A6
+    lea     0x21A46.l, A6
     add.b   (0, A6,D0.w), D1
     move.b  0x101068.l, D0
     andi.b  #0x07, D0

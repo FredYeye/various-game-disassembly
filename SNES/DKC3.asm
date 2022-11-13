@@ -27,8 +27,8 @@ hirom
 
     !level_id = $00C0
 
-	!flags_05AF = $05AF ;bitfield of unknown length (32?) | 05B0:6 = two kongs available
-	!active_kong = $05B5 ;0=dixie, 1=kiddie
+    !flags_05AF = $05AF ;bitfield of unknown length (32?) | 05B0:6 = two kongs available
+    !active_kong = $05B5 ;0=dixie, 1=kiddie
     !starting_point = $05B7 ;level starting point index
 
     !connected_levels = $0785
@@ -38,10 +38,10 @@ hirom
     !dixie  = $0878
     !kiddie = $08E6
 
-	!invuln_flicker_timer_dixie = $1494
-	!invuln_timer_dixie = $1496
-	!invuln_flicker_timer_kiddie = $14E6
-	!invuln_timer_kiddie = $14E8
+    !invuln_flicker_timer_dixie = $1494
+    !invuln_timer_dixie = $1496
+    !invuln_flicker_timer_kiddie = $14E6
+    !invuln_timer_kiddie = $14E8
 
     !sky_effect_timer = $15E2
     !sky_effect_type  = $15E8
@@ -56,8 +56,8 @@ hirom
 {
     !pos_x = $11
     !pos_y = $15
-	
-	!obj_size = $6E
+    
+    !obj_size = $6E
 }
 
 
@@ -65,7 +65,7 @@ hirom
 {
     !belcha_s_barn         = $1D
     !arich_s_ambush        = $1E
-	!squirt_s_showdown     = $1F
+    !squirt_s_showdown     = $1F
     !lakeside_limbo        = $25
     !kreeping_klasps       = $26
     !tidal_trouble         = $27
@@ -91,22 +91,22 @@ hirom
 sky_fade:
 
 .blue_gray:
-	dw $79EA, $7A6F, $7AF4, $7B58, $7BDE
-	dw $71EA, $724F, $72D3, $7337, $739C
-	dw $6DCA, $6E2E, $6EB3, $6F17, $6F7B
-	dw $65CA, $662E, $6A92, $6AF6, $6B5A
-	dw $61AA, $620E, $6691, $66D5, $6739
-	dw $59A9, $5E0D, $5E71, $62B4, $6318
-	dw $5589, $55ED, $5A50, $5E94, $5EF7
-	dw $4D89, $51CC, $5630, $5A93, $5AD6
-	dw $4969, $4DCC, $522F, $5272, $56B5
-	dw $4169, $45AC, $4A0E, $4E51, $5294
-	dw $3D48, $418B, $45EE, $4A31, $4E73
-	dw $3548, $398B, $41CD, $4610, $4A52
-	dw $3128, $356B, $3DCD, $41EF, $4631
-	dw $2928, $316A, $35AC, $3DCE, $4210
-	dw $2508, $294A, $318C, $39CE, $3DEF
-	dw $2108, $2529, $2D6B, $35AD, $3DEF
+    dw $79EA, $7A6F, $7AF4, $7B58, $7BDE
+    dw $71EA, $724F, $72D3, $7337, $739C
+    dw $6DCA, $6E2E, $6EB3, $6F17, $6F7B
+    dw $65CA, $662E, $6A92, $6AF6, $6B5A
+    dw $61AA, $620E, $6691, $66D5, $6739
+    dw $59A9, $5E0D, $5E71, $62B4, $6318
+    dw $5589, $55ED, $5A50, $5E94, $5EF7
+    dw $4D89, $51CC, $5630, $5A93, $5AD6
+    dw $4969, $4DCC, $522F, $5272, $56B5
+    dw $4169, $45AC, $4A0E, $4E51, $5294
+    dw $3D48, $418B, $45EE, $4A31, $4E73
+    dw $3548, $398B, $41CD, $4610, $4A52
+    dw $3128, $356B, $3DCD, $41EF, $4631
+    dw $2928, $316A, $35AC, $3DCE, $4210
+    dw $2508, $294A, $318C, $39CE, $3DEF
+    dw $2108, $2529, $2D6B, $35AD, $3DEF
 }
 
 
@@ -274,63 +274,63 @@ org $B3A7CC : .tidal_trouble:
 
 { : org $B6DFA1 ;DFA1 - DFF8
 squirt_data:
-	dw .phase4, .phase3, .phase2, .phase1
+    dw .phase4, .phase3, .phase2, .phase1
 
 .phase1:
-	db $04 ;show/hide wait timer
-	db $04 ;show/hide eyes transition speed/timer
-	db $00, $01
-	db $04 ;close mouth wait timer
-	db $04 ;close mouth transition speed/timer
-	db $00, $01
-	dw $01F0 ;water shoot timer
-	dw $00C8 ;eyes out timer
-	dw $0019 ;eyes hidden timer
-	dw $001E ;hide mouth wait timer
-	dw $0080 ;angle change
-	db $03, $03
+    db $04 ;show/hide wait timer
+    db $04 ;show/hide eyes transition speed/timer
+    db $00, $01
+    db $04 ;close mouth wait timer
+    db $04 ;close mouth transition speed/timer
+    db $00, $01
+    dw $01F0 ;water shoot timer
+    dw $00C8 ;eyes out timer
+    dw $0019 ;eyes hidden timer
+    dw $001E ;hide mouth wait timer
+    dw $0080 ;angle change
+    db $03, $03
 
 .phase2:
-	db $04
-	db $04
-	db $00, $01
-	db $04
-	db $04
-	db $00, $01
-	dw $02F0
-	dw $00B4
-	dw $0019
-	dw $001E
-	dw $00B0
-	db $03, $03
+    db $04
+    db $04
+    db $00, $01
+    db $04
+    db $04
+    db $00, $01
+    dw $02F0
+    dw $00B4
+    dw $0019
+    dw $001E
+    dw $00B0
+    db $03, $03
 
 .phase3:
-	db $04
-	db $04
-	db $00, $01
-	db $04
-	db $04
-	db $00, $01
-	dw $0250
-	dw $00A0
-	dw $0019
-	dw $001E
-	dw $00E0
-	db $03, $03
+    db $04
+    db $04
+    db $00, $01
+    db $04
+    db $04
+    db $00, $01
+    dw $0250
+    dw $00A0
+    dw $0019
+    dw $001E
+    dw $00E0
+    db $03, $03
 
 .phase4:
     db $04
-	db $04
-	db $00, $01
-	db $04
-	db $04
-	db $00, $01
-	dw $0250
-	dw $00A0
-	db $0019
-	dw $001E
-	dw $00E0
-	db $03, $03
+    db $04
+    db $00, $01
+    db $04
+    db $04
+    db $00, $01
+    dw $0250
+    dw $00A0
+    db $0019
+    dw $001E
+    dw $00E0
+    db $03, $03
 
 
 }
@@ -558,10 +558,10 @@ org $FD19F0
 
 
 { : org $FD2B44 ;? - ?
-	;these two values are used at least in barrel shield bust-up (2-1)
-	db $44 ;backdrop(G) intensity
+    ;these two values are used at least in barrel shield bust-up (2-1)
+    db $44 ;backdrop(G) intensity
 org $FD2B47
-	db $24 ;backdrop(R) intensity
+    db $24 ;backdrop(R) intensity
 }
 
 ;---------- FF

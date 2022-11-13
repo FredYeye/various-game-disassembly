@@ -18,14 +18,14 @@ _02E0E: ;rng
     ori.b   #0x11, CCR
 .02E38:
     roxr.w  (0x2A, A5)
-    lea.l   (0x2A, A5), A0
+    lea     (0x2A, A5), A0
     move.w  #0x07, D7
     moveq   #0, D0
 .02E46:
     add.w   (A0), D0
     add.b   (0x0A, PC, D7.w), D0
     move.w  D0, (A0)+
-    dbf.w   D7, .02E46
+    dbf     D7, .02E46
     rts
 
 .02E54:
