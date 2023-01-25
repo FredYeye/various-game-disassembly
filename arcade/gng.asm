@@ -1,3 +1,5 @@
+!arthur_state = 0x8952 ;arthur + 0x01B8 (0x0952)
+
 ;A5: 0x00FF8000 (pointer to middle of RAM)
 
 ;-----
@@ -44,19 +46,19 @@ _002664: ;set new weapon
 
 ;-----
 
-arthur: ;placeholder label to have a main label to attach sublabels to
+arthur: ;placeholder label to have a label to attach sub labels to
     ;A1: arthur (most of time, anyway)
 
     ;todo
 ;B5BC: jump based on arthur's state
-    movea.l (0x8952, A5), A0 ;0x0952: arthur + 0x01B8
+    movea.l (!arthur_state, A5), A0
     jmp     (A0)
 
 .old_man_init: ;D09E
     moveq   #0, D0
     move.b  D0, (0x50B0, A5)
     move.b  D0, (0x50B1, A5)
-    move.l  #.old_man_run, (0x8952, A5) ;0x0952: arthur + 0x01B8
+    move.l  #.old_man_run, (!arthur_state, A5)
 .old_man_run: ;D0B0: run old man transform
     btst.b  #0x03, (0x08, A1)
     beq.b   .D0CC
@@ -65,7 +67,7 @@ arthur: ;placeholder label to have a main label to attach sublabels to
     ;todo
 
 .duck_init: ;D526: init duck transform
-    move.l  #.duck_run, (0x8952, A5) ;0x0952: arthur + 0x01B8
+    move.l  #.duck_run, (!arthur_state, A5)
     move.l  #0xD6EE, (0x8966, A5)
     bclr.b  #0x01, (0x08, A1)
     move.b  #0x00, (0x50B6, A5)
@@ -251,7 +253,7 @@ _049818: ;magician projectile hitting arthur?
     bra.w   .98A0
 
 .9898:
-    move.l  #arthur.duck_init, (0x8952, A5) ;0x0952: arthur + 0x01B8 = set arthur function to run
+    move.l  #arthur.duck_init, (!arthur_state, A5)
 .98A0:
     rts
 
@@ -262,7 +264,7 @@ _049818: ;magician projectile hitting arthur?
     bra.w   .98B6
 
 .98AE:
-    move.l  #arthur.old_man_init, (0x8952, A5) ;0x0952: arthur + 0x01B8
+    move.l  #arthur.old_man_init, (!arthur_state, A5)
 .98B6:
     rts
 
