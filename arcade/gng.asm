@@ -56,7 +56,7 @@ arthur: ;placeholder label to have a main label to attach sublabels to
     moveq   #0, D0
     move.b  D0, (0x50B0, A5)
     move.b  D0, (0x50B1, A5)
-    move.l  #0xD0B0, (0x8952, A5) ;0x0952: arthur + 0x01B8
+    move.l  #.old_man_run, (0x8952, A5) ;0x0952: arthur + 0x01B8
 .old_man_run: ;D0B0: run old man transform
     btst.b  #0x03, (0x08, A1)
     beq.b   .D0CC
@@ -65,7 +65,7 @@ arthur: ;placeholder label to have a main label to attach sublabels to
     ;todo
 
 .duck_init: ;D526: init duck transform
-    move.l  #0xD548, (0x8952, A5) ;0x0952: arthur + 0x01B8
+    move.l  #.duck_run, (0x8952, A5) ;0x0952: arthur + 0x01B8
     move.l  #0xD6EE, (0x8966, A5)
     bclr.b  #0x01, (0x08, A1)
     move.b  #0x00, (0x50B6, A5)
