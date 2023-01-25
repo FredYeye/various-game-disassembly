@@ -1,5 +1,9 @@
 !arthur_state = 0x8952 ;arthur + 0x01B8 (0x0952)
 
+!arthur_hp = 0x10
+
+;-----
+
 ;A5: 0x00FF8000 (pointer to middle of RAM)
 
 ;-----
@@ -158,6 +162,49 @@ arthur: ;placeholder label to have a label to attach sub labels to
 .D818: ;todo
 .D840: ;todo
 .D88E: ;todo
+
+;-----
+
+_0489B0: ;armor upgrade
+    andi.b  #0xDF, (0x13, A1)
+    movea.l (0x8868, A5), A2
+    cmpi.b  #0x03, (0x12, A2)
+    beq.w   .8A14
+
+    move.b  (0x11, A2), D0
+    beq.w   .8A20
+
+    btst.b  #0x02, (0x11, A2)
+    bne.w   .8A20
+
+    btst.b  #0x02, (0x08, A2)
+    bne.w   .8A20
+
+    tst.b   (!arthur_hp, A2)
+    beq.w   .89F0
+
+    tst.b   (0x40, A1)
+    bne.w   .8A06
+
+.89F0:
+    cmpi.b  #0x02, (0x12, A2)
+    beq.w   .8A14
+
+    move.l  #0xD260, (!arthur_state, A5)
+    bra.w   .8A14
+
+.8A06:
+    cmpi.b  #0x03, (0x12,A2)
+    beq.b   .8A14
+
+    jsr     0x01B714.l
+.8A14:
+    andi.b  #0xFD, (0x13, A1)
+    bset.b  #0x03, (0x08, A1)
+.8A20:
+    jmp     0xDC34.l
+
+
 
 ;-----
 
