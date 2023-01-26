@@ -50,25 +50,104 @@ _002664: ;set new weapon
 
 ;-----
 
-arthur: ;placeholder label to have a label to attach sub labels to
+_006194:
+    ;todo
+
+.61C0:
+    ;todo: appears to draw red dot closest to the weapon icon and redraws the weapon icon
+
+.61DE:
+    moveq   #0, D0
+    move.b  (0x4052, A5), D0
+    move.w  (0x06, PC, D0.w), D1
+    jmp     (0x02, PC, D1.w)
+
+    d16 0x0004, 0x006A
+
+.61F0: ;0x0004
+    ;gold armor stuff
+    addq.b  #2, (0x4052, A5)
+    moveq   #0, D0
+    move.b  D0, (0x4053, A5)
+    move.b  D0, (0x4057, A5)
+    move.b  D0, (0x4058, A5)
+    move.b  D0, (0x4054, A5)
+    move.b  #0x02, (0x4055, A5)
+    move.b  D0, (0x4056, A5)
+    move.b  D0, (0x8960, A5)
+    move.b  D0, (0x8962, A5)
+    move.b  D0, (0x8961, A5)
+    move.b  D0, (0x895F, A5)
+    move.b  #0x01, (0x895E, A5)
+    tst.b   (0x8768, A5)
+    beq.w   .6246
+
+    move.w  #0x000F, D0
+    bsr.w   .64E8
+    move.w  #0x0000, D0
+    bsr.w   _006194
+    bsr.w   .644C
+    bra.w   .638A
+
+.6246:
+    move.w  #0x0007, D0
+    bsr.w   .61C0
+    bsr.w   .644C
+    bra.w   .63D8
+
+.6256: ;0x006A
+    ;todo
+
+.638A:
+    ;todo
+.63D8:
+    ;todo
+.644C:
+    ;todo: draws the other dots
+.64E8:
+    ;todo
+;-----
+
+arthur: ;unknown start; placeholder label to have a label to attach sub labels to
     ;A1: arthur (most of time, anyway)
 
-    ;todo
 ;B5BC: jump based on arthur's state
     movea.l (!arthur_state, A5), A0
     jmp     (A0)
+
+.B5C2:
 
 .old_man_init: ;D09E
     moveq   #0, D0
     move.b  D0, (0x50B0, A5)
     move.b  D0, (0x50B1, A5)
     move.l  #.old_man_run, (!arthur_state, A5)
-.old_man_run: ;D0B0: run old man transform
+.old_man_run: ;D0B0
     btst.b  #0x03, (0x08, A1)
     beq.b   .D0CC
     ;todo
 .D0CC:
     ;todo
+
+.steel_armor_pickup: ;D260
+    move.b  #0x01, (!arthur_hp, A1)
+    move.b  #0x01, (0x11, A1)
+    move.b  #0x02, (0x12, A1)
+    movea.l #0x0144A8, A2
+    movea.l (0x34, A1), A0
+    adda.w  #0x0180, A0
+    move.l  A0, (0x34, A1)
+    movea.l (0x28, A1), A0
+    adda.l  #0x0180, A0
+    move.l  A0, (0x28, A1)
+    move.b  (0x0F, A1), D2
+    jsr     0x2880.w
+    move.b  D2, (0x0F, A1)
+    move.l  #arthur.B5C2, (!arthur_state, A5)
+    move.b  #0x00, (0x8931, A5)
+    jsr     0x466A.w
+    movea.l (0x8966, A5), A0
+    jmp     (A0)
 
 .duck_init: ;D526: init duck transform
     move.l  #.duck_run, (!arthur_state, A5)
@@ -165,6 +244,18 @@ arthur: ;placeholder label to have a label to attach sub labels to
 
 ;-----
 
+_01B714: ;gold armor stuff
+    movea.l (0x8868, A5), A0
+    move.b  #0x02, (0x11, A0)
+    move.b  #0x03, (0x12, A0)
+    move.b  #0x00, (0x4052, A5)
+    jsr     _006194.61DE ;creates magic bar?
+    move.l  #0xC920, (0x8966, A5)
+    move.b  #0xFF, (0x8931, A5)
+    jmp     0x466A.w
+
+;-----
+
 _0489B0: ;armor upgrade
     andi.b  #0xDF, (0x13, A1)
     movea.l (0x8868, A5), A2
@@ -177,7 +268,7 @@ _0489B0: ;armor upgrade
     btst.b  #0x02, (0x11, A2)
     bne.w   .8A20
 
-    btst.b  #0x02, (0x08, A2)
+    btst.b  #0x02, (0x08, A2) ;check if arthur is standing?
     bne.w   .8A20
 
     tst.b   (!arthur_hp, A2)
@@ -190,14 +281,14 @@ _0489B0: ;armor upgrade
     cmpi.b  #0x02, (0x12, A2)
     beq.w   .8A14
 
-    move.l  #0xD260, (!arthur_state, A5) ;related to gold armor
+    move.l  #arthur.steel_armor_pickup, (!arthur_state, A5)
     bra.w   .8A14
 
 .8A06:
     cmpi.b  #0x03, (0x12, A2)
     beq.b   .8A14
 
-    jsr     0x01B714.l
+    jsr     _01B714
 .8A14:
     andi.b  #0xFD, (0x13, A1)
     bset.b  #0x03, (0x08, A1)
