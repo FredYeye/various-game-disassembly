@@ -190,11 +190,11 @@ _0489B0: ;armor upgrade
     cmpi.b  #0x02, (0x12, A2)
     beq.w   .8A14
 
-    move.l  #0xD260, (!arthur_state, A5)
+    move.l  #0xD260, (!arthur_state, A5) ;related to gold armor
     bra.w   .8A14
 
 .8A06:
-    cmpi.b  #0x03, (0x12,A2)
+    cmpi.b  #0x03, (0x12, A2)
     beq.b   .8A14
 
     jsr     0x01B714.l
