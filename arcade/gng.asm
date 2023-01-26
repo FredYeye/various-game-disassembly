@@ -2,11 +2,11 @@
 
 !arthur_hp = 0x10
 
-;-----
+;----------
 
 ;A5: 0x00FF8000 (pointer to middle of RAM)
 
-;-----
+;----------
 
 _002664: ;set new weapon
     movea.l (0x8868, A5), A0 ;0x0868: has offset to arthur
@@ -48,13 +48,25 @@ _002664: ;set new weapon
     move.w  D0, (0x50E0, A5) ;0xD0E0
     rts
 
-;-----
+;----------
 
 _006194:
     ;todo
 
+;---
+
 .61C0:
-    ;todo: appears to draw red dot closest to the weapon icon and redraws the weapon icon
+    movea.l #0xFF079A, A4
+    tst.b   (0x86D0, A5)
+    beq.b   .61D2
+    movea.l #0xFF07FA, A4
+.61D2:
+    moveq   #0, D1
+    move.b  (0x2C, A4), D1
+    add.w   D1, D0
+    bra.w   .674A
+
+;---
 
 .61DE:
     moveq   #0, D0
@@ -91,22 +103,116 @@ _006194:
 
 .6246:
     move.w  #0x0007, D0
-    bsr.w   .61C0
+    bsr.w   .61C0 ;add closest red dot and redraw weapon
     bsr.w   .644C
-    bra.w   .63D8
+    bra.w   .63D8 ;draw the other dots
 
 .6256: ;0x006A
     ;todo
 
+;---
+
 .638A:
     ;todo
-.63D8:
-    ;todo
+
+;---
+
+.63D8: ;draws the other dots
+    movea.l #0x90036C, A0
+    move.w  #0x0001, D2
+    moveq   #0, D0
+    move.b  (0x4057, A5), D0
+    add.b   D0, D0
+    lea     (0x0B4C, PC), A4 ;A4 = 0x6F38
+    move.w  (0, A4, D0.w), D1
+    lea     (0, A4, D1.w), A4
+    move.w  #0x00F, D5
+.63FA:
+    move.w  (A4)+, D3
+    addi.w  #0x2000, D3
+    move.w  D3, (0x00, A0)
+    move.w  D2, (0x02, A0)
+    addi.w  #0x0010, D3
+    move.w  D3, (0x04, A0)
+    move.w  D2, (0x06, A0)
+    lea     (0x80, A0), A0
+    dbf     D5, .63FA
+    rts
+
+;---
+
 .644C:
-    ;todo: draws the other dots
+    moveq   #0, D0
+    move.b  (0x4057, A5), D0
+    move.b  (0x0E, PC, D0.w), D0
+    move.b  D0, (0x4054, A5)
+    moveq   #0, D1
+    rts
+
+;---
+
 .64E8:
     ;todo
-;-----
+
+;---
+
+.674A: ;draw red dot closest to the weapon icon and redraw weapon icon
+    lsl.b   #1, D0
+    lea     (0x80, PC), A0 ;A0 = 0x67CE
+    move.w  (0, A0, D0.w), D0
+    lea     (0, A0, D0.w), A0
+.6758:
+    moveq   #0, D0
+    moveq   #0, D2
+    move.l  D2, D1
+    lea     0x900000, A2
+    move.b  (A0)+, D2
+    lsl.w   #7, D2
+    move.b  (A0)+, D1
+    add.w   D1, D2
+    lea     (0, A2, D2.w), A2
+    movea.l A2, A3
+    move.w  (A0)+, D1
+.6774:
+    movea.l A3, A2
+    lea     (0x04, A3), A3
+.677A:
+    move.w  (A0)+, D2
+    beq.b   .67A2
+
+    cmpi.w  #0xFFFD, D2
+    beq.w   .67A4
+
+    cmpi.w  #0xFFFF, D2
+    beq.b   .6758
+
+    cmpi.w  #0xFFFE, D2
+    beq.b   .6774
+
+    addi.w  #0x2000, D2
+    move.w  D2, (A2)
+    move.w  D1, (0x02,A2)
+    lea     (0x80, A2), A2
+    bra.b   .677A
+.67A2:
+    rts
+
+.67A4:
+    move.w  (A0)+, D2
+    addi.w  #0x2000, D2
+    move.w  #0x0001, D6
+.67AE:
+    move.w  D2, (A2)
+    move.w  D1, (0x02,A2)
+    addi.w  #0x01, D2
+    move.w  D2, (0x80, A2)
+    move.w  D1, (0x82, A2)
+    lea     (0x04, A2), A2
+    addi.w  #0x0F, D2
+    dbf     D6, .67AE
+    rts
+
+;----------
 
 arthur: ;unknown start; placeholder label to have a label to attach sub labels to
     ;A1: arthur (most of time, anyway)
@@ -116,6 +222,8 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     jmp     (A0)
 
 .B5C2:
+
+;---
 
 .old_man_init: ;D09E
     moveq   #0, D0
@@ -128,6 +236,8 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     ;todo
 .D0CC:
     ;todo
+
+;---
 
 .steel_armor_pickup: ;D260
     move.b  #0x01, (!arthur_hp, A1)
@@ -148,6 +258,8 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     jsr     0x466A.w
     movea.l (0x8966, A5), A0
     jmp     (A0)
+
+;---
 
 .duck_init: ;D526: init duck transform
     move.l  #.duck_run, (!arthur_state, A5)
@@ -242,19 +354,19 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 .D840: ;todo
 .D88E: ;todo
 
-;-----
+;----------
 
 _01B714: ;gold armor stuff
     movea.l (0x8868, A5), A0
     move.b  #0x02, (0x11, A0)
     move.b  #0x03, (0x12, A0)
     move.b  #0x00, (0x4052, A5)
-    jsr     _006194.61DE ;creates magic bar?
+    jsr     _006194.61DE ;creates magic bar
     move.l  #0xC920, (0x8966, A5)
     move.b  #0xFF, (0x8931, A5)
     jmp     0x466A.w
 
-;-----
+;----------
 
 _0489B0: ;armor upgrade
     andi.b  #0xDF, (0x13, A1)
@@ -295,9 +407,7 @@ _0489B0: ;armor upgrade
 .8A20:
     jmp     0xDC34.l
 
-
-
-;-----
+;----------
 
 ; A0, A1: magician projectile object slot
 ; A2: magician object slot
@@ -347,7 +457,7 @@ _0496B2: ;create magician projectile
     move.w  (0x02, A0), (0x16, A1) ;y speed
     rts
 
-;-----
+;---
 
 _049818: ;magician projectile hitting arthur?
     andi.b  #0xDF, (0x13, A1)
@@ -421,4 +531,4 @@ _049818: ;magician projectile hitting arthur?
 
     rts
 
-;-----
+;----------
