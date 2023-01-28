@@ -3,17 +3,23 @@
 !arthur_p2 = 0xFF07FA
 
 ;relative to A5(0x8000)
-!transform_old_man_timer = 0x50B4
-!current_player = 0x86D0
-!current_player_arthur_offset = 0x8868
-!invincibility = 0x8931
-!arthur_state = 0x8952 ;name?
-!magic_enabled = 0x895E
-!arthur_state2 = 0x8966 ;name?
+!transform_old_man_timer      = 0x50B4
+!current_player               = 0x86D0
+!current_player_arthur_offset = 0x8868 ;0xFF079A (P1) or 0xFF07FA (P2)
+!invincibility                = 0x8931 ;i-frames bool
+!arthur_action                = 0x8952 ;name? function pointer
+!magic_enabled                = 0x895E ;magic bool
+!arthur_action2               = 0x8966 ;name? function pointer
 
 ;relative to current player/arthur
-!arthur_hp = 0x10
+!arthur_state  = 0x08 ;bitfield for arthur's current actions (standing, jumping etc...)
+!arthur_state2 = 0x09 ;^
+!arthur_hp     = 0x10
 !arthur_weapon = 0x2C
+
+;arthur_state flags
+!state_jump = 0
+!state_shot = 1
 
 ;----------
 
@@ -257,10 +263,45 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     ;A1: arthur (most of time, anyway)
 
 ;B5BC: jump based on arthur's state
-    movea.l (!arthur_state, A5), A0
+    movea.l (!arthur_action, A5), A0
     jmp     (A0)
 
 .B5C2:
+    ;todo
+
+;---
+
+.C920: ;adds cape, plays gold armor anim
+    move.b  #0xFF, (0x895D, A5)
+    bclr.b  #!state_shot, (!arthur_state, A1)
+    move.b  #0x11, (0x8957, A5)
+    jsr     0x01B742.l
+    btst.b  #!state_jump, (!arthur_state, A1)
+    beq.b   .C95E
+
+    move.l  #.C948, (!arthur_action2, A5)
+.C948: ;waiting for arthur to stop moving to play gold armor anim
+    move.w  #0x0000, (0x8876, A5)
+    jsr     0xBAF2.l
+    btst.b  #!state_jump, (!arthur_state, A1)
+    beq.b   .C95E
+
+    rts
+
+.C95E:
+    move.b  #0x00, (0x8956, A5)
+    andi.b  #0b11000000, (!arthur_state2, A1)
+    bset.b  #0x00, (!arthur_state2, A1)
+    move.b  #0x00, (0x0E, A1)
+    move.l  #0x0148D8, (0x28, A1)
+    jsr     0x2880.w
+    move.l  #0xE240, (0x24, A1)
+    move.l  #0xC998, (!arthur_action2, A5)
+    bsr.w   .C9EC
+    rts
+
+.C9EC:
+    ;todo
 
 ;---
 
@@ -268,13 +309,13 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     moveq   #0x00, D0
     move.b  D0, (0x50B0, A5)
     move.b  D0, (0x50B1, A5)
-    move.l  #.old_man_run, (!arthur_state, A5)
+    move.l  #.old_man_run, (!arthur_action, A5)
 .old_man_run: ;D0B0
-    btst.b  #0x03, (0x08, A1)
+    btst.b  #0x03, (!arthur_state, A1)
     beq.b   .D0CC
 
     move.b  #0x00, (0x8963, A5)
-    move.l  #0xD2B6, (!arthur_state, A5)
+    move.l  #0xD2B6, (!arthur_action, A5)
     jmp     0xD2B6.l
 
 .D0CC:
@@ -292,7 +333,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     move.b  (0x50B0, A5), D0
     move.w  (0x0C, PC, D0.w), D0
     jsr     (0x08, PC, D0.w)
-    movea.l (0x8966, A5), A0
+    movea.l (!arthur_action2, A5), A0
     jmp     (A0)
 
     d16 0x0006, 0x003E, 0x0050
@@ -347,22 +388,22 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     move.b  (0x0F, A1), D2
     jsr     0x2880.w
     move.b  D2, (0x0F, A1)
-    move.l  #arthur.B5C2, (!arthur_state, A5)
+    move.l  #arthur.B5C2, (!arthur_action, A5)
     move.b  #0x00, (!invincibility, A5)
     jsr     0x466A.w
-    movea.l (0x8966, A5), A0
+    movea.l (!arthur_action2, A5), A0
     jmp     (A0)
 
 ;---
 
 .duck_init: ;D526: init duck transform
-    move.l  #.duck_run, (!arthur_state, A5)
-    move.l  #0xD6EE, (0x8966, A5)
-    bclr.b  #0x01, (0x08, A1)
+    move.l  #.duck_run, (!arthur_action, A5)
+    move.l  #0xD6EE, (!arthur_action2, A5)
+    bclr.b  #!state_shot, (!arthur_state, A1)
     move.b  #0x00, (0x50B6, A5)
     move.b  #0x00, (0x50B7, A5)
 .duck_run: ;D548: run duck transform
-    btst.b  #0x02, (0x08, A1)
+    btst.b  #0x02, (!arthur_state, A1)
     beq.b   .D572
 
     btst.b  #0x02, (0x11, A1)
@@ -371,7 +412,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     addi.w  #0x08, (0x04, A1)
     bclr.b  #0x02, (0x11, A1)
 .D564:
-    move.l  #0xB658, (0x8966, A5)
+    move.l  #0xB658, (!arthur_action2, A5)
     jmp     0xBC14.l
 
 .D572:
@@ -379,7 +420,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     move.b  (0x50B6, A5), D0
     move.w  (0x0C, PC, D0.w), D0
     jsr     (0x08, PC, D0.w)
-    movea.l (0x8966, A5), A0
+    movea.l (!arthur_action2, A5), A0
     jmp     (A0)
 
     ;todo
@@ -388,7 +429,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     ori.b   #0x10, (0x8877, A5) ;0x0877: arthur + 0xDD
     move.w  #0x0000, D7
     move.b  (0x8876, A5), D7 ;0x0876: arthur + 0xDC
-    btst.b  #0x00, (0x08, A1)
+    btst.b  #0x00, (!arthur_state, A1)
     beq.b   .D708
 
     bra.w   .D840
@@ -411,11 +452,11 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     moveq   #0x00, D0
     move.l  D0, (0x14, A1)
     move.b  D0, (0x0E, A1)
-    btst.b  #0x00, (0x09, A1) ;check flags
+    btst.b  #0x00, (!arthur_state2, A1) ;check flag
     bne.b   .D75E
 
-    andi.b  #0b11000000, (0x09, A1) ;clear some flags
-    ori.b   #0b00000001, (0x09, A1) ;set some flag (crouch/stand?)
+    andi.b  #0b11000000, (!arthur_state2, A1)
+    ori.b   #0b00000001, (!arthur_state2, A1)
     move.l  #0x0147A8, (0x28, A1)
     jsr     0x2880.w
 .D75E:
@@ -436,7 +477,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     move.b  #0x01, (0x8956, A5)
     move.w  #0x01CC, (0x14, A1)
     move.w  #0x00, (0x16, A1)
-    cmpi.b  #0x82, (0x09, A1)
+    cmpi.b  #0x82, (!arthur_state2, A1)
     beq.w   .D818
 
     clr.b   (0x0E, A1)
@@ -456,7 +497,7 @@ _01B714: ;gold armor stuff
     move.b  #0x03, (0x12, A0)
     move.b  #0x00, (0x4052, A5)
     jsr     _00614E.61DE ;creates magic bar
-    move.l  #0xC920, (0x8966, A5) ;gold armor pickup anim, create cape
+    move.l  #arthur.C920, (!arthur_action2, A5) ;gold armor pickup anim, create cape
     move.b  #0xFF, (!invincibility, A5)
     jmp     0x466A.w
 
@@ -474,7 +515,7 @@ _0489B0: ;armor upgrade
     btst.b  #0x02, (0x11, A2)
     bne.w   .8A20
 
-    btst.b  #0x02, (0x08, A2) ;check if arthur is standing?
+    btst.b  #0x02, (!arthur_state, A2) ;check if arthur is standing?
     bne.w   .8A20
 
     tst.b   (!arthur_hp, A2)
@@ -487,7 +528,7 @@ _0489B0: ;armor upgrade
     cmpi.b  #0x02, (0x12, A2)
     beq.w   .8A14
 
-    move.l  #arthur.steel_armor_pickup, (!arthur_state, A5)
+    move.l  #arthur.steel_armor_pickup, (!arthur_action, A5)
     bra.w   .8A14
 
 .8A06:
@@ -497,7 +538,7 @@ _0489B0: ;armor upgrade
     jsr     _01B714
 .8A14:
     andi.b  #0xFD, (0x13, A1)
-    bset.b  #0x03, (0x08, A1)
+    bset.b  #0x03, (!arthur_state, A1)
 .8A20:
     jmp     0xDC34.l
 
@@ -595,7 +636,7 @@ _049818: ;magician projectile hitting arthur
     bra.w   .98A0
 
 .9898:
-    move.l  #arthur.duck_init, (!arthur_state, A5)
+    move.l  #arthur.duck_init, (!arthur_action, A5)
 .98A0:
     rts
 
@@ -606,7 +647,7 @@ _049818: ;magician projectile hitting arthur
     bra.w   .98B6
 
 .98AE:
-    move.l  #arthur.old_man_init, (!arthur_state, A5)
+    move.l  #arthur.old_man_init, (!arthur_action, A5)
 .98B6:
     rts
 
