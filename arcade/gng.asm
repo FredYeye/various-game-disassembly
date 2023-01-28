@@ -7,8 +7,9 @@
 !current_player = 0x86D0
 !current_player_arthur_offset = 0x8868
 !invincibility = 0x8931
-!arthur_state = 0x8952 ;arthur + 0x01B8 (0x0952)
+!arthur_state = 0x8952 ;name?
 !magic_enabled = 0x895E
+!arthur_state2 = 0x8966 ;name?
 
 ;relative to current player/arthur
 !arthur_hp = 0x10
@@ -61,6 +62,8 @@ _002664: ;set new weapon
     rts
 
 ;----------
+
+;hud update code?
 
 _00614E:
     movea.l #!arthur_p1, A4
@@ -271,7 +274,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     beq.b   .D0CC
 
     move.b  #0x00, (0x8963, A5)
-    move.l  #0xD2B6, (0x8952, A5)
+    move.l  #0xD2B6, (!arthur_state, A5)
     jmp     0xD2B6.l
 
 .D0CC:
@@ -453,7 +456,7 @@ _01B714: ;gold armor stuff
     move.b  #0x03, (0x12, A0)
     move.b  #0x00, (0x4052, A5)
     jsr     _00614E.61DE ;creates magic bar
-    move.l  #0xC920, (0x8966, A5)
+    move.l  #0xC920, (0x8966, A5) ;gold armor pickup anim, create cape
     move.b  #0xFF, (!invincibility, A5)
     jmp     0x466A.w
 
