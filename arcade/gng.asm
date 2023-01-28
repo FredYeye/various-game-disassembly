@@ -1,3 +1,9 @@
+;---------- CPS-1 defines
+
+!gfxram = 0x900000
+
+;---------- arthur defines
+
 ;absolute
 !arthur_p1 = 0xFF079A
 !arthur_p2 = 0xFF07FA
@@ -210,7 +216,7 @@ _00614E:
     moveq   #0x00, D0
     moveq   #0x00, D2
     move.l  D2, D1
-    lea     0x900000, A2
+    lea     !gfxram, A2
     move.b  (A0)+, D2
     lsl.w   #7, D2
     move.b  (A0)+, D1
@@ -249,11 +255,11 @@ _00614E:
 .67AE:
     move.w  D2, (A2)
     move.w  D1, (0x02,A2)
-    addi.w  #0x01, D2
+    addi.w  #0x0001, D2
     move.w  D2, (0x80, A2)
     move.w  D1, (0x82, A2)
     lea     (0x04, A2), A2
-    addi.w  #0x0F, D2
+    addi.w  #0x000F, D2
     dbf     D6, .67AE
     rts
 
@@ -280,7 +286,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     beq.b   .C95E
 
     move.l  #.C948, (!arthur_action2, A5)
-.C948: ;waiting for arthur to stop moving to play gold armor anim
+.C948: ;waiting for arthur to land to play gold armor anim
     move.w  #0x0000, (0x8876, A5)
     jsr     0xBAF2.l
     btst.b  #!state_jump, (!arthur_state, A1)
