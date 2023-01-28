@@ -18,10 +18,13 @@
 !arthur_action2               = 0x8966 ;name? function pointer
 
 ;relative to current player/arthur
-!arthur_state  = 0x08 ;bitfield for arthur's current actions (standing, jumping etc...)
-!arthur_state2 = 0x09 ;^
-!arthur_hp     = 0x10
-!arthur_weapon = 0x2C
+!arthur_state   = 0x08 ;bitfield for arthur's current actions (standing, jumping etc...)
+!arthur_state2  = 0x09 ;^
+!arthur_hp      = 0x10
+!arthur_speed_x = 0x14
+!arthur_speed_y = 0x16
+!arthur_gravity = 0x18
+!arthur_weapon  = 0x2C
 
 ;arthur_state flags
 !state_jump = 0
@@ -274,6 +277,32 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 
 .B5C2:
     ;todo
+
+;---
+
+.C07E:
+    andi.b  #0b11000000, (!arthur_state2, A1)
+    ori.b   #0b00001000, (!arthur_state2, A1)
+    move.l  #0xE47C, (0x24, A1)
+    move.b  (0x11, A1), D0
+    ext.w   D0
+    lsl.w   #3, D0
+    lea     (0x0130, PC), A0 ;0xC1CC
+    adda.w  D0, A0
+    clr.w   (!arthur_speed_x, A1)
+    move.w  (A0)+, (!arthur_speed_y, A1) ;jump height
+    move.w  (A0)+, (!arthur_gravity, A1)
+    clr.b   (0x0E, A1)
+    lea     (0x90, A2), A0
+    move.l  A0, (0x28, A1)
+    bset.b  #0x00, (0x08, A1)
+    jsr     0x2A86.w
+    ;todo
+
+.C1CC:
+    d16 0x03C0, 0xFFC8
+    d16 0x0000, 0x01E6
+    d16 0x0420, 0xFFC8
 
 ;---
 
