@@ -205,9 +205,10 @@ _00614E:
 .61DE:
     moveq   #0x00, D0
     move.b  (0x4052, A5), D0
-    move.w  (0x06, PC, D0.w), D1
-    jmp     (0x02, PC, D1.w)
+    move.w  (.61EC, PC, D0.w), D1
+    jmp     (.61EC, PC, D1.w)
 
+.61EC:
     d16 0x0004, 0x006A
 
 .61F0: ;0x0004
@@ -360,14 +361,32 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 
 ;---
 
-.C07E:
+.C04A:
+    move.b  (0x8876, A5), D0
+    andi.w  #0x0F, D0
+    add.w   D0, D0
+    move.w  (.C05C, PC, D0.w), D0
+    jmp     (.C05C, PC, D0.w)
+
+.C05C:
+    d16 0x0022, 0x0090, 0x00FA, 0x0020, 0x0022, 0x0022, 0x0022, 0x0020
+    d16 0x0022, 0x0022, 0x0022, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020
+
+;---
+
+.C07C: ;0020
+    rts
+
+;---
+
+.C07E: ;0022
     andi.b  #0b11000000, (!arthur_state2, A1)
     ori.b   #0b00001000, (!arthur_state2, A1)
     move.l  #0xE47C, (0x24, A1)
     move.b  (0x11, A1), D0
     ext.w   D0
     lsl.w   #3, D0
-    lea     (0x0130, PC), A0 ;0xC1CC
+    lea     (0x0130, PC), A0 ;.C1CA+2
     adda.w  D0, A0
     clr.w   (!arthur_speed_x, A1)
     move.w  (A0)+, (!arthur_speed_y, A1) ;jump height
@@ -375,14 +394,56 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     clr.b   (0x0E, A1)
     lea     (0x90, A2), A0
     move.l  A0, (0x28, A1)
-    bset.b  #0x00, (0x08, A1)
+    bset.b  #0x00, (!arthur_state, A1)
     jsr     0x2A86.w
     ;todo
 
-.C1CC:
-    d16 0x03C0, 0xFFC8
-    d16 0x0000, 0x01E6
-    d16 0x0420, 0xFFC8
+;---
+
+.C0EC: ;0090
+    clr.l   D2
+    move.b  #0x84, (!arthur_state2, A1)
+    move.l  #0xE382, (0x24, A1)
+    move.b  (0x11, A1), D0
+    ext.w   D0
+    lsl.w   #3, D0
+    lea     (.C1CA, PC), A0
+    adda.w  D0, A0
+    move.w  (A0)+, (!arthur_speed_x ,A1)
+    move.w  (A0)+, (!arthur_speed_y ,A1)
+    move.w  (A0)+, (!arthur_gravity ,A1)
+    clr.b   (0x0E, A1)
+    ;todo
+
+;---
+
+.C156: ;00FA
+    move.b  #0x44, (!arthur_state2, A1)
+    move.l  #0xE402, (0x24, A1)
+    move.b  (0x11, A1), D0
+    ext.w   D0
+    lsl.w   #3, D0
+    lea     (.C1CA, PC), A0
+    adda.w  D0, A0
+    move.w  (A0)+, (!arthur_speed_x, A1)
+    move.w  (A0)+, (!arthur_speed_y, A1)
+    move.w  (A0)+, (!arthur_gravity, A1)
+    move.w  (A0)+, (0x1A, A1)
+    neg.w   (!arthur_speed_x, A1)
+    neg.w   (0x1A, A1)
+    clr.b   (0x0E, A1)
+    lea     (0x80, A2), A0
+    move.l  A0, (0x28, A1)
+    bset.b  #0x00, (!arthur_state, A1)
+    ;todo
+
+;---
+
+.C1CA: ;x speed, y speed, gravity
+    d16 0x0100, 0x03C0, 0xFFC8, 0x0000
+    d16 0x01E6, 0x0420, 0xFFC8, 0x0000
+    d16 0x01E6, 0x0420, 0xFFC8, 0x0000
+    d16 0x01E6, 0x0420, 0xFFC8, 0x0000
 
 ;---
 
@@ -396,8 +457,8 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 .C392:
     andi.w  #0x0007, D0
     add.w   D0, D0
-    move.w  (0x06, PC, D0.w), D0
-    jmp     (0x02, PC, D0.w)
+    move.w  (.C3A0, PC, D0.w), D0
+    jmp     (.C3A0, PC, D0.w)
 
 .C3A0:
     d16 0x0012, 0x00A6, 0x014C, 0x0010, 0x0200, 0x0200, 0x0200, 0x0010
@@ -408,11 +469,11 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     d16 0x00E6, 0x01B3, 0x01B3, 0x01B3 ;walk speed, right
 
 .C446: ;00A6 - walking right
-    cmpi.b  #0x82, (0x09, A1)
+    cmpi.b  #0x82, (!arthur_state2, A1)
     beq.w   .C478
 
     bclr.b  #0x01, (0x08, A1)
-    move.b  #0x82, (0x09, A1)
+    move.b  #0x82, (!arthur_state2, A1)
     jsr     0x2A86.w
     beq.b   .C468
 
@@ -452,7 +513,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     move.b  (0x11, A1), D0
     ext.w   D0
     add.w   D0, D0
-    move.w  (0x86, PC, D0.w), (!arthur_speed_x, A1) ;.C43E
+    move.w  (.C43E, PC, D0.w), (!arthur_speed_x, A1)
     move.b  #0x01, (0x8956, A5)
     ;todo
 
@@ -460,12 +521,12 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     ;todo
 
 .C4EC: ;0x014C - walking left
-    cmpi.b  #0x42, (0x09, A1)
+    cmpi.b  #0x42, (!arthur_state2, A1)
     beq.w   .C52A
 
     clr.b   (0x0E, A1)
-    bclr.b  #0x01, (0x08, A1)
-    move.b  #0x42, (0x09, A1)
+    bclr.b  #0x01, (!arthur_state, A1)
+    move.b  #0x42, (!arthur_state2, A1)
     jsr     0x2A86.w
     beq.b   .C51A
 
@@ -478,10 +539,6 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     ;todo
 .C52A:
     ;todo
-
-;---
-
-
 
 ;---
 
@@ -545,11 +602,12 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 .D0E0:
     moveq   #0x00, D0
     move.b  (0x50B0, A5), D0
-    move.w  (0x0C, PC, D0.w), D0
-    jsr     (0x08, PC, D0.w)
+    move.w  (.D0F4, PC, D0.w), D0
+    jsr     (.D0F4, PC, D0.w)
     movea.l (!arthur_action2, A5), A0
     jmp     (A0)
 
+.D0F4:
     d16 0x0006, 0x003E, 0x0050
 
 ;---
@@ -656,9 +714,10 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     move.b  (0x8876, A5), D0 ;0x0876: arthur + 0xDC
     andi.w  #0b11, D0
     add.w   D0, D0
-    move.w  (0x06, PC, D0.w), D0
-    jmp     (0x02, PC, D0.w) ;jump to offset
+    move.w  (.D726, PC, D0.w), D0
+    jmp     (.D726, PC, D0.w)
 
+.D726:
     d16 0x0008, 0x0062, 0x00AA, 0x0008
 
 ;D72E (0008) - standing duck?
