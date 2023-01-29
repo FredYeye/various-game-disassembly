@@ -2,6 +2,10 @@
 
 !gfxram = 0x900000
 
+;---------- engine defines
+
+!rank = 0x892A
+
 ;---------- arthur defines
 
 ;absolute
@@ -25,6 +29,8 @@
 !arthur_speed_y = 0x16
 !arthur_gravity = 0x18
 !arthur_weapon  = 0x2C
+!stage          = 0x2E
+!checkpoint     = 0x2F
 
 ;arthur_state flags
 !state_jump = 0
@@ -75,6 +81,80 @@ _002664: ;set new weapon
     move.b  D0, (0x50DF, A5) ;0xD0DF
     move.w  D0, (0x50E0, A5) ;0xD0E0
     rts
+
+;----------
+
+_0028BA:
+    btst.b  #0x01, (0x877A, A5)
+    beq.w   .28E0
+
+    move.w  (0x877E,A5), D1
+    beq.b   .28D2
+
+    ext.l   D1
+    lsl.l   #8, D1
+    add.l   D1, (0x04, A1)
+.28D2:
+    move.w  (0x877C, A5), D1
+    beq.b   .28E0
+
+    ext.l   D1
+    lsl.l   #8, D1
+    add.l   D1, (0x00, A1)
+.28E0:
+    move.w  (0x16, A1), D1
+    add.w   (0x8950, A5), D1
+    move.w  D1, (0x16, A1)
+    beq.b   .292E
+
+    bpl.b   .2918
+
+    move.w  (0x86A8, A5), D0
+    add.w   (0x8944, A5), D0
+    cmp.w   (0x04, A1), D0
+    blt.b   .2926
+
+    move.w  D0, (0x04, A1)
+    move.l  #0xD440, (!arthur_action, A5)
+    bra.b   .2910
+
+.290C:
+    move.w  D0, (0x04,A1)
+.2910:
+    moveq   #0x00, D0
+    move.w  D0, (0x16, A1)
+    bra.b   .292E
+
+.2918:
+    move.w  (0x86A8, A5), D0
+    add.w   (0x8942, A5), D0
+    cmp.w   (0x04, A1), D0
+    blt.b   .290C
+
+.2926:
+    ext.l   D1
+    lsl.l   #8, D1
+    add.l   D1, (0x04, A1)
+.292E:
+    move.w  (!arthur_speed_x, A1), D1
+    add.w   (0x894E, A5), D1
+    move.w  D1, (!arthur_speed_x, A1)
+    beq.b   .2974
+
+    bmi.w   .295E
+
+    move.w  (0x869E, A5), D0
+    add.w   (0x8946, A5), D0
+    cmp.w   (0x00, A1), D0
+    bgt.b   .296C
+
+    move.w  D0, (0x00, A1)
+    moveq   #0x00, D0
+    ;todo
+
+.295E: ;todo
+.296C: ;todo
+.2974: ;todo
 
 ;----------
 
@@ -303,6 +383,105 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     d16 0x03C0, 0xFFC8
     d16 0x0000, 0x01E6
     d16 0x0420, 0xFFC8
+
+;---
+
+.C380:
+    move.w  #0x0000, D0
+    move.b  (0x8876, A5), D0
+    btst.l  #0x03, D0
+    beq.w   .C392
+
+    clr.w   D0
+.C392:
+    andi.w  #0x0007, D0
+    add.w   D0, D0
+    move.w  (0x06, PC, D0.w), D0
+    jmp     (0x02, PC, D0.w)
+
+.C3A0:
+    d16 0x0012, 0x00A6, 0x014C, 0x0010, 0x0200, 0x0200, 0x0200, 0x0010
+
+;---
+
+.C43E:
+    d16 0x00E6, 0x01B3, 0x01B3, 0x01B3 ;walk speed, right
+
+.C446: ;00A6 - walking right
+    cmpi.b  #0x82, (0x09, A1)
+    beq.w   .C478
+
+    bclr.b  #0x01, (0x08, A1)
+    move.b  #0x82, (0x09, A1)
+    jsr     0x2A86.w
+    beq.b   .C468
+
+    jmp     0xB89C.l
+
+.C468:
+    move.b  #0x00, (0x0E, A1)
+    lea     (0x10, A2), A0
+    move.l  A0, (0x28, A1)
+    bra.b   .C4AA
+
+.C478:
+    jsr     0x2A86.w
+    beq.b   .C484
+
+    jmp     0xB89C.l
+
+.C484:
+    btst.b  #0x01, (0x08, A1)
+    bne.w   .C4C8
+
+    tst.b   (0x0F, A1)
+    beq.b   .C49A
+
+    subq.b  #1, (0x0F, A1)
+    bra.b   .C4AE
+
+.C49A:
+    addq.b  #1, (0x0E, A1)
+    cmpi.b  #0x06, (0x0E, A1)
+    bne.b   .C4AA
+
+    clr.b   (0x0E, A1)
+.C4AA:
+    jsr     0x2880.w
+.C4AE:
+    move.b  (0x11, A1), D0
+    ext.w   D0
+    add.w   D0, D0
+    move.w  (0x86, PC, D0.w), (!arthur_speed_x, A1) ;.C43E
+    move.b  #0x01, (0x8956, A5)
+    ;todo
+
+.C4C8:
+    ;todo
+
+.C4EC: ;0x014C - walking left
+    cmpi.b  #0x42, (0x09, A1)
+    beq.w   .C52A
+
+    clr.b   (0x0E, A1)
+    bclr.b  #0x01, (0x08, A1)
+    move.b  #0x42, (0x09, A1)
+    jsr     0x2A86.w
+    beq.b   .C51A
+
+    jmp     0xB89C.l
+
+.C512:
+    d16 0xFF1A, 0xFE4D, 0xFE4D, 0xFE4D ;walk speed, left
+
+.C51A:
+    ;todo
+.C52A:
+    ;todo
+
+;---
+
+
 
 ;---
 
