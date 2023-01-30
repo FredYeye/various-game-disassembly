@@ -16,21 +16,25 @@
 !transform_old_man_timer      = 0x50B4
 !current_player               = 0x86D0
 !current_player_arthur_offset = 0x8868 ;0xFF079A (P1) or 0xFF07FA (P2)
+!arthur_position_x2           = 0x886C
+!arthur_position_y2           = 0x886E
 !invincibility                = 0x8931 ;i-frames bool
 !arthur_action                = 0x8952 ;name? function pointer
 !magic_enabled                = 0x895E ;magic bool
 !arthur_action2               = 0x8966 ;name? function pointer
 
 ;relative to current player/arthur
-!arthur_state   = 0x08 ;bitfield for arthur's current actions (standing, jumping etc...)
-!arthur_state2  = 0x09 ;^
-!arthur_hp      = 0x10
-!arthur_speed_x = 0x14
-!arthur_speed_y = 0x16
-!arthur_gravity = 0x18
-!arthur_weapon  = 0x2C
-!stage          = 0x2E
-!checkpoint     = 0x2F
+!arthur_position_x = 0x00
+!arthur_position_y = 0x04
+!arthur_state      = 0x08 ;bitfield for arthur's current actions (standing, jumping etc...)
+!arthur_state2     = 0x09 ;^
+!arthur_hp         = 0x10
+!arthur_speed_x    = 0x14
+!arthur_speed_y    = 0x16
+!arthur_gravity    = 0x18
+!arthur_weapon     = 0x2C
+!stage             = 0x2E
+!checkpoint        = 0x2F
 
 ;arthur_state flags
 !state_jump = 0
@@ -155,6 +159,50 @@ _0028BA:
 .295E: ;todo
 .296C: ;todo
 .2974: ;todo
+
+;----------
+
+_002982: ;probably part of above code
+    move.w  (0x894A, A5), (0x894E, A5)
+    tst.b   (0x3FD8, A5)
+    beq.b   .29D2
+
+    btst.b  #!state_jump, (!arthur_state, A1)
+    bne.b   .29CA
+
+    btst.b  #!state_shot, (!arthur_state, A1)
+    bne.b   .29BC
+
+    btst.b  #0x01, (!arthur_state2, A1)
+    bne.b   .29CA
+
+    cmpi.b  #0x02, (0x11, A1)
+    bne.b   .29BC
+
+    btst.b  #0x00, (!arthur_state2, A1)
+    beq.b   .29BC
+
+    move.w  #0x1BDB, (0x0A, A1)
+.29BC:
+    move.w  #0x0000, D0
+    move.w  D0, (0x14, A1)
+    move.w  D0, (0x894E, A5)
+    rts
+
+.29CA:
+    ;todo
+
+.29D2:
+    cmpi.b  #0x05, (!stage, A1)
+    bne.b   .29E8
+
+    btst.b  #!state_jump, (!arthur_state, A1)
+    beq.b   0x29E8
+
+    move.w  #0x0000, (0x894E, A5)
+.29E8:
+    move.w  (0x894C, A5), (0x8950, A5)
+    rts
 
 ;----------
 
@@ -764,6 +812,29 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 
 ;----------
 
+_00E322: ;maybe part of arthur's code
+    or.w    D1, D1
+    beq.w   .E4E0
+
+    bmi.b   .E34A
+
+    cmp.w   (0x8862, A5), D1
+    bgt.b   .E33C
+
+    add.w   D1, (!arthur_position_y, A1)
+    lsl.w   #8, D1
+    move.w  D1, (!arthur_speed_y, A1)
+    rts
+
+.E33C:
+    ;todo
+.E34A:
+    ;todo
+.E4E0:
+    ;todo
+
+;----------
+
 _01B714: ;gold armor stuff
     movea.l (!current_player_arthur_offset, A5), A0
     move.b  #0x02, (0x11, A0)
@@ -773,6 +844,123 @@ _01B714: ;gold armor stuff
     move.l  #arthur.C920, (!arthur_action2, A5) ;gold armor pickup anim, create cape
     move.b  #0xFF, (!invincibility, A5)
     jmp     0x466A.w
+
+;----------
+
+_03AEC8: ;stage 2 quicksand handler, entry further down
+    moveq   #0x00, D2
+    move.w  (!arthur_position_x2, A5), D1
+    subi.w  #0x05FA, D1
+    cmpi.w  #0x0290, D1
+    bls.b   .AEF6
+
+    move.w  #0x0A7A, D1
+    sub.w   (!arthur_position_x2, A5), D1
+    cmpi.w  #0x01E0, D1
+    bls.b   .AF4E
+
+.AEE6:
+    move.w  #0x0000, (0x894A, A5)
+    move.w  #0x0000, (0x894C, A5)
+.AEF2:
+    moveq   #0x01, D2
+    rts
+
+.AEF6:
+    tst.b   (0x0B, A1)
+    bne.b   .AEF2
+
+    move.b  (0x3627, A5), D0
+    andi.b  #0x1F, D0
+    bne.b   .AF0A
+
+    jsr     0x474A.w
+.AF0A:
+    move.w  (!arthur_position_y2, A5), D0
+    subi.w  #0x1C, D0
+    move.w  (!arthur_position_x2, A5), D1
+    cmpi.w  #0x07EF, D1
+    bcc.b   .AF3C
+
+    cmpi.w  #0x00F0, D0
+    bhi.b   .AEE6
+
+    clr.b   (0x45, A1)
+    move.w  #0x0080, D3 ;speed modifier, first slope
+    sub.w   (0x4C, A1), D1
+    bmi.b   .AF3A
+
+    move.b  #0x01, (0x45, A1)
+    move.w  #0xFF20, D3 ;speed modifier, second slope (first half)
+.AF3A:
+    rts
+
+.AF3C:
+    cmpi.w  #0x0130, D0
+    bhi.b   .AEE6
+
+    move.b  #0x01, (0x45, A1)
+    cmpi.w  #0x0130, D0
+    bhi.b   .AEE6
+
+    move.b  #0x01, (0x45, A1)
+    move.w  #0xFF20, D3 ;speed modifier, second slope (second half)
+    rts
+
+.AF4E:
+    cmpi.b  #0x02, (0x0B, A1)
+    bne.b   .AEF2
+
+    move.b  (0x3627, A5), D0
+    andi.b  #0x1F, D0
+    bne.b   .AF64
+
+    jsr     0x474A.w
+.AF64:
+    move.w  (!arthur_position_y2, A5), D0
+    subi.w  #0x001C, D0
+    move.w  (!arthur_position_x2, A5), D1
+    cmpi.w  #0x0A0E, D1
+    bhi.b   .AF98
+
+    cmpi.w  #0x0120, D0
+    bhi.w   .AEE6
+
+    move.w  #0x00E0, D3 ;speed modifier, third slope
+    clr.b   (0x45, A1)
+    sub.w   (0x4C, A1), D1
+    bmi.b   .AF96
+
+    move.w  #0xFF20, D3 ;speed modifier, fourth slope (first half)
+    move.b  #0x01, (0x45, A1)
+.AF96:
+    rts
+
+.AF98:
+    cmpi.w  #0x0140, D0
+    bhi.w   .AEE6
+
+    move.b  #0x01, (0x45, A1)
+    move.w  #0xFF20, D3 ;speed modifier, fourth slope (second half)
+.AFAA:
+    rts
+
+;---
+
+.AFAC: ;stage 2 quicksand handler entry
+    bsr.w   _03AEC8
+    dbf     D2, .AFAA
+
+    move.b  (0x8939, A5), D0
+    bne.b   .AFC4
+
+    move.w  D3, (0x894A, A5) ;set quicksand X speed
+    clr.w   (0x894C, A5)
+    rts
+
+.AFC4:
+    move.b  (0x48, A1), D1
+    ;todo
 
 ;----------
 
@@ -886,7 +1074,7 @@ _049818: ;magician projectile hitting arthur
     move.b  #0x29, (0x12, A1)
     move.l  #0x049936, (0x2C, A1)
     clr.l   (0x14, A1)
-    move.w  (0x886C, A5), D0 ;0x086C: arthur + 0xD2 (some kind of x pos)
+    move.w  (!arthur_position_y2, A5), D0
     move.w  (0x886E, A5), D1
     move.w  D0, (0x00, A1)
     move.w  D1, (0x04, A1)
