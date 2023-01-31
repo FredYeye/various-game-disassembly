@@ -409,6 +409,26 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 
 ;---
 
+.BAF2: ;jumping? falling?
+    ;todo
+;BBA2
+    move.w  (!arthur_speed_x, A1), D0
+    beq.b   .BBB8
+
+    bmi.b   .BBB2
+
+    move.w  #0x0100, (!arthur_speed_x, A1) ;cap arthur's x speed after falling long enough (right)
+    bra.b   .BBB8
+
+.BBB2:
+    move.w  #0xFF00, (!arthur_speed_x, A1) ;cap arthur's x speed after falling long enough (left)
+.BBB8:
+    jsr     0x2A86.w
+    ;todo
+
+
+;---
+
 .C04A:
     move.b  (0x8876, A5), D0
     andi.w  #0x0F, D0
@@ -812,7 +832,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 
 ;----------
 
-_00E322: ;maybe part of arthur's code
+_00E322: ;maybe part of arthur's code. walking left?
     or.w    D1, D1
     beq.w   .E4E0
 
@@ -947,7 +967,7 @@ _03AEC8: ;stage 2 quicksand handler, entry further down
 
 ;---
 
-.AFAC: ;stage 2 quicksand handler entry
+.AFAC: ;stage 2 quicksand handler entry (for x speed, in any case)
     bsr.w   _03AEC8
     dbf     D2, .AFAA
 
@@ -956,11 +976,55 @@ _03AEC8: ;stage 2 quicksand handler, entry further down
 
     move.w  D3, (0x894A, A5) ;set quicksand X speed
     clr.w   (0x894C, A5)
+.AFC2:
     rts
 
 .AFC4:
     move.b  (0x48, A1), D1
-    ;todo
+    eori.b  #0x01, D1
+    and.b   D1, D0
+    cmpi.b  #0x01, D0
+    bne.b   .AFC2
+
+    movea.l (!current_player_arthur_offset, A5), A2
+    move.w  #0x0300, (!arthur_speed_y, A2) ;cap quicksand jump height
+    tst.b   (0x45, A1)
+    beq.b   .B00A
+
+    tst.b   (0x8938, A5)
+    beq.b   .B002
+
+    cmpi.b  #0x01, (0x8938, A5)
+    beq.b   .AFFA
+
+    move.w  #0x0120, (!arthur_speed_x, A2)
+    rts
+
+.AFFA:
+    move.w  #0xFE00, (!arthur_speed_x, A2)
+    rts
+
+.B002:
+    move.w  #0xFF00, (!arthur_speed_x, A2)
+    rts
+
+.B00A:
+    tst.b   (0x8938, A5)
+    beq.b   .B028
+
+    cmpi.b  #0x01, (0x8938, A5)
+    beq.b   .B020
+
+    move.w  #0x0200, (!arthur_speed_x, A2)
+    rts
+
+.B020:
+    move.w  #0xFEE0, (!arthur_speed_x, A2)
+    rts
+
+.B028:
+    move.w  #0x0100, (!arthur_speed_x, A2)
+    rts
 
 ;----------
 
