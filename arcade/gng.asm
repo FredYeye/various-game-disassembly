@@ -6,6 +6,14 @@
 
 !rank = 0x892A
 
+!weapon_lance_active_count = 0x8992
+!weapon_knife_active_count = 0x8993
+!weapon_torch_active_count = 0x8994
+!weapon_sword_active_count = 0x8995
+!weapon_axe_active_count   = 0x8996
+
+!weapon_cooldown = 0x50E2 ;only axe or other weapons too?
+
 ;---------- arthur defines
 
 ;absolute
@@ -46,6 +54,47 @@
 
 ;----------
 
+_0025BA: ;weapon firing handler?
+    move.l  A2, -(A7)
+    move.w  #0x0000, D1
+    move.w  D1, D2
+    move.b  (0x11, A1), D1
+    lsl.w   #5, D1
+    move.b  (!arthur_weapon, A1), D2
+    lsl.w   #2, D2
+    add.w   D1, D2
+    movea.l (.2604, PC, D2.w), A0
+    jsr     (A0)
+    bra.w   .25F2
+
+;maybe alternate entry?
+    movea.l (A7)+, A2
+    btst.b  #0x01, (0x08, A1)
+    beq.b   .25E6
+    rts
+
+.25E6:
+    movea.l (0x34, A1), A0
+    move.l  A0, (0x28, A1)
+    jmp     0x2880.w
+
+.25F2:
+    bset.b  #0x01, (0x08, A1)
+    movea.l (A7)+, A2
+    move.b  #0x00, (0x0E, A1)
+    jmp     0x2880.w
+
+.2604:
+    ;not sure how these offsets should be grouped yet
+    d32 0x016470, 0x0166EE, 0x016D84, 0x0174F8, 0x01782C, 0x017C82, 0x018412, 0x01634C, 0x01634C
+    d32 _0166AE ;knife
+    d32 0x016D50, 0x0174BE
+    d32 _0177EA ;axe
+    d32 0x017C4E, 0x0183B6, 0x01634C
+    d32 0x01634C ;todo
+
+;----------
+
 _002664: ;set new weapon
     movea.l (!current_player_arthur_offset, A5), A0
 .2668:
@@ -81,7 +130,7 @@ _002664: ;set new weapon
     moveq   #0x00, D0
     move.b  D0, (0x885B, A5) ;0x085B
     move.w  D0, (0x885C, A5) ;0x085C
-    move.b  D0, (0x50E2, A5) ;0xD0E2
+    move.b  D0, (!weapon_cooldown, A5) ;0xD0E2
     move.b  D0, (0x50DF, A5) ;0xD0DF
     move.w  D0, (0x50E0, A5) ;0xD0E0
     rts
@@ -663,10 +712,10 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 
     addq.b  #1, (0x885D, A5)
 .D0D6:
-    tst.b   (0x50E2, A5)
+    tst.b   (!weapon_cooldown, A5)
     beq.b   .D0E0
 
-    subq.b #1, (0x50E2, A5)
+    subq.b #1, (!weapon_cooldown, A5)
 .D0E0:
     moveq   #0x00, D0
     move.b  (0x50B0, A5), D0
@@ -851,6 +900,73 @@ _00E322: ;maybe part of arthur's code. walking left?
 .E34A:
     ;todo
 .E4E0:
+    ;todo
+
+;----------
+
+_0166AE: ;create knife?
+    cmpi.b  #0x03, (!weapon_knife_active_count, A5)
+    beq.w   .66E2
+
+    move.w  D0, D5
+    jsr     0x217A.w
+    beq.w   .66E2
+
+    addq.b  #1, (!weapon_knife_active_count, A5)
+    jsr     0x26CE.w
+    move.b  #0x02, (0x0A, A0)
+    bsr.w   .6774
+    add.w   D5, D5
+    move.w  (.66E6, PC, D5.w), D5
+    jsr     (.66E6, PC, D5.w)
+    jmp     0x462A.w
+.66E2:
+    jmp     0x462A.w
+
+.66E6:
+    d16 0x00D8, 0x020E, 0x0368 ;todo
+
+;---
+
+.6774:
+    ;todo
+
+;---
+
+.68F4: ;0x020E
+    ;todo
+
+;----------
+
+_0177EA: ;create axe?
+    cmpi.b  #0x02, (!weapon_axe_active_count, A5)
+    beq.b   .7820
+
+    tst.b   (!weapon_cooldown, A5)
+    bne.b   .7820
+
+    move.w  D0, D5
+    jsr     0x217A.w
+    beq.b   .7820
+
+    move.b  #0x1E, (!weapon_cooldown, A5) ;weapon cooldown timer
+    addq.b  #1, (!weapon_axe_active_count, A5)
+    jsr     0x26CE.w
+    bsr.w   .786E
+    add.w   D5, D5
+    move.w  (.7824, PC, D5.w), D5
+    jsr     (.7824, PC, D5.w)
+    jmp     0x4632.w
+
+.7820:
+    jmp     0x4632.w
+
+.7824:
+    ;todo
+
+;---
+
+.786E:
     ;todo
 
 ;----------
