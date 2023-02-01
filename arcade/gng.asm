@@ -6,11 +6,12 @@
 
 !rank = 0x892A
 
-!weapon_lance_active_count = 0x8992
-!weapon_knife_active_count = 0x8993
-!weapon_torch_active_count = 0x8994
-!weapon_sword_active_count = 0x8995
-!weapon_axe_active_count   = 0x8996
+!weapon_lance_active_count  = 0x8992
+!weapon_knife_active_count  = 0x8993
+!weapon_torch_active_count  = 0x8994
+!weapon_sword_active_count  = 0x8995
+!weapon_axe_active_count    = 0x8996
+!weapon_discus_active_count = 0x8997
 
 !weapon_cooldown = 0x50E2 ;only axe or other weapons too?
 
@@ -86,11 +87,15 @@ _0025BA: ;weapon firing handler?
 
 .2604:
     ;not sure how these offsets should be grouped yet
-    d32 0x016470, 0x0166EE, 0x016D84, 0x0174F8, 0x01782C, 0x017C82, 0x018412, 0x01634C, 0x01634C
-    d32 _0166AE ;knife
-    d32 0x016D50, 0x0174BE
-    d32 _0177EA ;axe
-    d32 0x017C4E, 0x0183B6, 0x01634C
+    d32 0x016470, 0x0166EE, 0x016D84, 0x0174F8, 0x01782C, 0x017C82, 0x018412
+    d32 0x01634C
+    d32 0x01634C ;lance
+    d32 _0166AE  ;knife
+    d32 0x016D50
+    d32 0x0174BE
+    d32 _0177EA  ;axe
+    d32 0x017C4E ;discus
+    d32 0x0183B6, 0x01634C
     d32 0x01634C ;todo
 
 ;----------
@@ -967,7 +972,16 @@ _0177EA: ;create axe?
 ;---
 
 .786E:
-    ;todo
+    move.b  #0x01, (0x08, A0)
+    move.b  #0x05, (0x0A, A0)
+    move.b  #0x41, (0x0D, A0)
+    move.b  #0x01, (0x11, A0)
+    move.b  #0x29, (0x12, A0)
+    move.b  #0x02, (0x13, A0)
+    move.l  #0x0711BA, (0x30, A0)
+    move.l  #0x0179F8, (0x34, A0)
+    move.w  #0x0018, (0x38, A0)
+    rts
 
 ;----------
 
