@@ -1,5 +1,11 @@
 lorom
 
+;snes registers
+{
+    !SLHV  = $2137 ;PPU1 Latch H/V-Counter by Software (Read=Strobe)
+    !OPHCT = $213C ;PPU2 Horizontal Counter Latch (read-twice)
+    !OPVCT = $213D ;PPU2 Vertical Counter Latch   (read-twice)
+}
 
 ;toggle register widths
 {
@@ -12,7 +18,6 @@ lorom
     !AX8  = "sep #$30"
     !AX16 = "rep #$30"
 }
-
 
 ;dragon view defines
 {
@@ -34,8 +39,9 @@ lorom
     !hauza_technique_timer = $A32D
 
     !golden_sandworm_encounter_count = $7EE7AE
-}
 
+    !rng_state = $A5
+}
 
 ;object defines
 {
@@ -54,7 +60,6 @@ lorom
     ;33 = frozen horror (pillar thing?)
 }
 
-
 ;equipment
 {
     !bomb = $01
@@ -62,7 +67,6 @@ lorom
     !ice_ring = $06
     !lightning_ring = $07
 }
-
 
 ;event list
 {
@@ -170,7 +174,6 @@ lorom
     !event_quicksand_strange_woman_play_horn = $04
 }
 
-
 ;script macros
 {
     macro set_flag(id)
@@ -214,9 +217,7 @@ lorom
     endmacro
 }
 
-
 ;---------- 00
-
 
 { : org $80B174 ;B174 - B1AA
 _80B174:
@@ -250,6 +251,35 @@ _80B174:
     rts
 }
 
+{ : org $80E3BC ;E3BC - E3E6
+rng:
+    phb
+    lda #$80 : pha : plb
+    lda !SLHV ;latch H/V counters
+    lda !OPHCT ;H counter, bits 0-7
+    pha
+    lda !OPHCT ;H counter, bit 8
+    pla        ;pull bits 0-7 to A, discard bit 8
+    adc !rng_state
+    sta !rng_state
+    lda !OPVCT ;V counter, bits 0-7
+    pha
+    lda !OPVCT ;V counter, bit 8
+    bit #$01
+    bne .E3E2 ;skip adding the v counter if on scanline >= 256
+
+    pla
+    adc !rng_state
+    sta !rng_state
+    bra .E3E3
+
+.E3E2:
+    pla
+.E3E3:
+    lda !rng_state
+    plb
+    rtl
+}
 
 { : org $80ECE9 ;ECE9 - ED36
 add_xp:
@@ -292,7 +322,6 @@ add_xp:
     ply
     rtl
 }
-
 
 { ;ED37 - EDD5
 _80ED37: ;xp requirement
@@ -349,7 +378,6 @@ _80ED37: ;xp requirement
     dw $6B2C, $73DB, $7D00, $869C, $90B4, $9B49, $A660, $B1FA, $BE1C
 }
 
-
 { ;EDD6 - ?
 enemy_xp:
     dw $0006
@@ -360,8 +388,8 @@ enemy_xp:
     dw $0005 ;scorpion (orange)
 
 }
-;---------- 01
 
+;---------- 01
 
 { : org $8189F3 ;89F3 - 8A83
 _8189F3: ;dealing damage to enemy
@@ -447,7 +475,6 @@ _8189F3: ;dealing damage to enemy
     rts
 }
 
-
 { : org $81A3AA ;A3AA - A3D2
 multiply: ;$0A = $06 * $08
     stz $0A
@@ -479,7 +506,6 @@ multiply: ;$0A = $06 * $08
 .A3D2:
     rts
 }
-
 
 { ;? - ?
 org $81BE97 ;ring damage multiplier
@@ -514,14 +540,11 @@ org $81BF66 : lightning_ring_table:
     db $05, $0A, $05
 }
 
-
 ;---------- 12
-
 
 { : org $92D7E0 ;D7E0 - D7EF
 bit_flags: dw $01, $02, $04, $08, $10, $20, $40, $80
 }
-
 
 { : org $92DA18 ;DA18 - DA2C
 _92DA18: ;get flag byte & bit offset
@@ -538,7 +561,6 @@ _92DA18: ;get flag byte & bit offset
     rts
 }
 
-
 { : org $92DA55 ;DA55 - DA66
 _92DA55: ;set event flag
     !A16
@@ -550,7 +572,6 @@ _92DA55: ;set event flag
     !A8
     rts
 }
-
 
 { ;DA67 - DA7D
 _92DA67:
@@ -565,9 +586,7 @@ _92DA67:
     rts
 }
 
-
 ;---------- 17
-
 
 { : org $97809F ;809F - 80C0
 hauza_set_damage:
@@ -587,14 +606,11 @@ hauza_set_damage:
 hauza_damage: db 00, 20, 30, 40, 50, 60
 }
 
-
 { ;? - ?
 org $9780DD : sword_damage: db 00, 15, 25, 35, 45, 55
 }
 
-
 ;---------- 19
-
 
 { : org $99CACF ;CACF - ?
 _99CACF:
@@ -625,9 +641,7 @@ org $99CB2C
     ;...
 }
 
-
 ;---------- 1C
-
 
 { : org $9C8A14 ;8A14 - ?
 _9C8A14:
@@ -638,7 +652,6 @@ _9C8A14:
     sta $BB92   ;decides spike damage direction
     jsr $9668
 }
-
 
 { : org $9C8B67 ;8B67 - 8B98
 _9C8B67:
@@ -678,16 +691,13 @@ _9C8B67:
 
 ;---------- 1E
 
-
 { ;? - ?
     org $9EDAD6 : %check_flag2(!event_found_horn)
     org $9EDB00 : %set_flag2(!event_quicksand_strange_woman_show_horn)
     org $9EDB52 : %set_flag2(!event_quicksand_strange_woman_play_horn)
 }
 
-
 ;---------- 20
-
 
 { ;? - ?
 _A08D89:
@@ -718,9 +728,7 @@ _A08D89:
     %set_flag($3E)
 }
 
-
 ;---------- 23
-
 
 { : org $A3815C ;815C - 8189
 _A3815C: ;hauza weapon technique

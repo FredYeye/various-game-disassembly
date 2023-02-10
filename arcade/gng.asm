@@ -313,7 +313,7 @@ _00614E:
 .61EC:
     d16 0x0004, 0x006A
 
-.61F0: ;0x0004
+.61F0: ;(0004)
     ;gold armor stuff
     addq.b  #2, (0x4052, A5)
     moveq   #0x00, D0
@@ -344,7 +344,7 @@ _00614E:
     bsr.w   .644C
     bra.w   .63D8 ;draw the other dots
 
-.6256: ;0x006A
+.6256: ;(006A)
     ;todo
 
 ;---
@@ -447,6 +447,64 @@ _00614E:
     lea     (0x04, A2), A2
     addi.w  #0x000F, D2
     dbf     D6, .67AE
+    rts
+
+;----------
+
+_009BC2: ;adjust rank on death
+    movea.l (!current_player_arthur_offset, A5), A2
+    tst.b   (0x31, A2)
+    bne.w   .9C38
+
+    clr.w   (0x503A, A5)
+    move.w  (0x5032, A5), (0x503C, A5)
+    move.w  (0x5034, A5), (0x503E, A5)
+    tst.b   (0x86CE, A5)
+    beq.b   .9C24
+
+    tst.b   (0x5040, A5)
+    bne.b   .9C24
+
+    tst.b   (0x30, A2)
+    bne.b   .9C0E
+
+    move.b  #0x01, (0x30, A2)
+    move.w  (0x5036, A5), D1
+    tst.b   (0x3B, A2)
+    beq.b   .9C04
+
+    move.w  (0x5038, A5), D1
+.9C04:
+    move.w  D1, (!rank, A5)
+    move.w  D1, (0x32, A2)
+    rts
+
+.9C0E:
+    move.w  (0x32, A2), D1
+    subi.w  #0x0008, D1
+    bcc.b   .9C1A
+
+    moveq   #0x00, D1
+.9C1A:
+    move.w  D1, (0x32, A2)
+    move.w  D1, (!rank, A5)
+    rts
+
+.9C24:
+    move.w  #0x0028, (!rank, A5)
+    move.w  #0x1518, (0x503C, A5)
+    move.w  #0x0384, (0x503E, A5)
+    rts
+
+.9C38:
+    clr.b   (0x31, A2)
+    move.w  (!rank, A5), D1
+    subi.w  #0x0008, D1
+    bcc.b   .9C48
+
+    moveq   #0x00, D1
+.9C48:
+    move.w  D1, (!rank, A5)
     rts
 
 ;----------
@@ -642,7 +700,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
 .C4C8:
     ;todo
 
-.C4EC: ;0x014C - walking left
+.C4EC: ;(014C) - walking left
     cmpi.b  #0x42, (!arthur_state2, A1)
     beq.w   .C52A
 
@@ -938,7 +996,7 @@ _0166AE: ;create knife?
 
 ;---
 
-.68F4: ;0x020E
+.68F4: ;(020E)
     ;todo
 
 ;----------

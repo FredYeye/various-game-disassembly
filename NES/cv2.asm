@@ -24,6 +24,7 @@
 !list_x_speed            = $0390
 !list x_speed_fractional = $03A2
 ; 03B4 state?
+; 03D8 ?
 !list_facing             = $0420
 ; 0444 ?
 ; 0456 gravity, also used for other things
