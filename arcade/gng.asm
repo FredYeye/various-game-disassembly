@@ -13,6 +13,9 @@
 !weapon_axe_active_count    = 0x8996
 !weapon_discus_active_count = 0x8997
 
+!rank_timer_state = 0x503A
+!rank_timer1 = 0x503C
+!rank_timer2 = 0x503E
 !weapon_cooldown = 0x50E2 ;only axe or other weapons too?
 
 ;---------- arthur defines
@@ -44,6 +47,9 @@
 !arthur_weapon     = 0x2C
 !stage             = 0x2E
 !checkpoint        = 0x2F
+;                  = 0x30 ;rank related, "made progress" bool of sorts, 0 = beaten a checkpoint or stage
+!arthur_rank_stage_clear = 0x31
+!arthur_rank       = 0x32
 
 ;arthur_state flags
 !state_jump = 0
@@ -451,14 +457,14 @@ _00614E:
 
 ;----------
 
-_009BC2: ;adjust rank on death
+_009BC2: ;adjust rank (on death, level complete)
     movea.l (!current_player_arthur_offset, A5), A2
-    tst.b   (0x31, A2)
+    tst.b   (!arthur_rank_stage_clear, A2)
     bne.w   .9C38
 
-    clr.w   (0x503A, A5)
-    move.w  (0x5032, A5), (0x503C, A5)
-    move.w  (0x5034, A5), (0x503E, A5)
+    clr.w   (!rank_timer_state, A5)
+    move.w  (0x5032, A5), (!rank_timer1, A5) ;5032: base timer1 (set by dips)?
+    move.w  (0x5034, A5), (!rank_timer2, A5) ;5034: base timer2 (set by dips)?
     tst.b   (0x86CE, A5)
     beq.b   .9C24
 
@@ -473,31 +479,31 @@ _009BC2: ;adjust rank on death
     tst.b   (0x3B, A2)
     beq.b   .9C04
 
-    move.w  (0x5038, A5), D1
+    move.w  (0x5038, A5), D1 ;5038: base rank (set by dips)?
 .9C04:
     move.w  D1, (!rank, A5)
-    move.w  D1, (0x32, A2)
+    move.w  D1, (!arthur_rank, A2)
     rts
 
-.9C0E:
-    move.w  (0x32, A2), D1
+.9C0E: ;no checkpoint reached / stage cleared since last death (?)
+    move.w  (!arthur_rank, A2), D1
     subi.w  #0x0008, D1
     bcc.b   .9C1A
 
     moveq   #0x00, D1
 .9C1A:
-    move.w  D1, (0x32, A2)
+    move.w  D1, (!arthur_rank, A2)
     move.w  D1, (!rank, A5)
     rts
 
 .9C24:
     move.w  #0x0028, (!rank, A5)
-    move.w  #0x1518, (0x503C, A5)
-    move.w  #0x0384, (0x503E, A5)
+    move.w  #0x1518, (!rank_timer1, A5)
+    move.w  #0x0384, (!rank_timer2, A5)
     rts
 
-.9C38:
-    clr.b   (0x31, A2)
+.9C38: ;adjust rank on clearing stage
+    clr.b   (!arthur_rank_stage_clear, A2)
     move.w  (!rank, A5), D1
     subi.w  #0x0008, D1
     bcc.b   .9C48
@@ -505,6 +511,44 @@ _009BC2: ;adjust rank on death
     moveq   #0x00, D1
 .9C48:
     move.w  D1, (!rank, A5)
+    rts
+
+;----------
+
+_009C4E: ;rank increase
+    move.w  (!rank_timer_state, A5), D0
+    move.w  (.9C5A, PC, D0.w), D1
+    jmp     (.9C5A, PC, D1.w)
+
+.9C5A:
+    d16 0x0006, 0x0016, 0x0038
+
+;---
+
+.9C60: ;(0006)
+    subq.w  #1, (!rank_timer1, A5)
+    beq.b   .9C68
+
+    rts
+
+.9C68:
+    addq.w  #2, (!rank_timer_state, A5)
+    bra.w   .9C7C
+
+.9C70: ;(0016)
+    subq.w  #1, (!rank_timer2, A5)
+    bne.b   .9C92
+
+    move.w  (0x5034, A5), (!rank_timer2, A5)
+.9C7C:
+    addq.w  #8, (!rank, A5)
+    cmpi.w  #0x0078, (!rank, A5)
+    bls.b   .9C92
+
+    move.w  #0x0078, (!rank, A5)
+    addq.w  #2, (!rank_timer_state, A5)
+
+.9C92: ;(0038)
     rts
 
 ;----------
