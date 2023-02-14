@@ -25,8 +25,8 @@ _00CAE5:
     ldy #$0B03 : ldx #$6000 : jsr $8C94
     ldy #$1811 : ldx #$7000 : jsr $8C94
     lda !stage
-    cmp #$0001
-    bne .CB19
+    cmp #$0001 ;is this stage 2?
+    bne .CB19  ;if not, branch
 
     lda !frame_counter
     and #$0007
@@ -39,10 +39,10 @@ _00CAE5:
 .CB19:
     lda !frame_counter
     and #$0007
-    cmp #$0007
-    bne .CB26
+    cmp #$0007 ;is this sage ID 7 (cat)?
+    bne .CB26  ;if not, branch
 
-    lda #$0002
+    lda #$0002 ;replace cat with sage ID 2 (lady)
 .CB26:
     sta $0150 ;store sage ID
     ;todo
