@@ -1,5 +1,9 @@
 {
     !frame_counter = $02
+
+    !p1_hp     = $68
+    !p1_hp_max = $C0
+
     !stage = $EA
 }
 
@@ -13,13 +17,25 @@
     ;obj struct
     !obj_x_pos   = $1014
     !obj_y_pos   = $1016
+    !obj_hp      = $1018
     !obj_type    = $101A
     !obj_x_speed = $101C
     !obj_y_speed = $101E
 }
 
 {
-_00CAE5:
+    !sage_samurai   = $0000
+    !sage_fisherman = $0001
+    !sage_lady      = $0002
+    !sage_green     = $0003
+    !sage_orange    = $0004
+    !sage_fat_man   = $0005
+    !sage_ebisumaru = $0006
+    !sage_cat       = $0007
+}
+
+{
+_00CAE5: ;runs during map screen
     ldy #$0018 : jsr $CE10
     ldx #$E000 : jsr $8C94
     ldy #$0B03 : ldx #$6000 : jsr $8C94
@@ -39,12 +55,20 @@ _00CAE5:
 .CB19:
     lda !frame_counter
     and #$0007
-    cmp #$0007 ;is this sage ID 7 (cat)?
+    cmp #!sage_cat ;picked cat sage?
     bne .CB26  ;if not, branch
 
-    lda #$0002 ;replace cat with sage ID 2 (lady)
+    lda #!sage_lady ;replace cat with sage ID 2 (lady)
 .CB26:
     sta $0150 ;store sage ID
+    ;todo
+}
+
+{
+_00E727: ;runs halfway through stage 1
+    ;todo
+;E781
+    lda #!sage_cat : sta $0150 ;prep for sage in basket
     ;todo
 }
 
