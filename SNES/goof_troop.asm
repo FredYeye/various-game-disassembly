@@ -4,7 +4,31 @@
 ;!state2 $03
 ;!state3 $04
 ;!type $0A
-;!hp 1C & 1D ?
+;!hp_new 1C ?
+;!hp_old 1D ?
+
+;----- 80
+
+{ ;8859 - 8879
+rng:
+    rep #$20
+    lda $1A58
+    asl
+    clc
+    adc $1A58
+    sta $0000
+    sep #$20
+    xba
+    clc
+    adc $1A58
+    sta $1A58
+    sta $0000
+    lda $0001
+    sta $1A59
+    rtl
+}
+
+;----- 81
 
 {
 _818397: ;run object
@@ -99,24 +123,78 @@ _81C549: ;pete
 ;---
 
 .CA59:
-.CA91:
-.CAFB:
-.CB2D:
-.CB41:
-.CB56:
-.CC00:
-.CC11:
-.CC26:
-.CC77:
-.CCA2:
-.CCDA:
-.CCFE:
+.CA91: ;02: start jump
+.CAFB: ;04: jumping up / jumping in general?
+.CB2D: ;06: landing
+.CB41: ;08: waiting
+.CB56: ;0A: whistling
+.CC00: ;0C: done whistling
+.CC11: ;0E: pointing
+
+;---
+
+.CC26: ;10: pick action (spinning can also be selected from elsewhere, from landing maybe?)
+    jsl rng
+    and #$0F
+    tax
+    lda $A837,X
+    beq .CC50
+
+    dec
+    beq .CC40
+
+    sta $0047
+    stz $0048
+    lda #$1A : sta $04
+    rts
+
+.CC40:
+    lda $00FB ;enemies killed on this screen? basically check if spawned pirates are still there
+    cmp #$02
+    beq .CC57
+
+    lda #$08
+    sta $03
+    sta $46
+    jmp $CDAF
+
+.CC50:
+    lda $00FB
+    cmp #$02
+    bne .CC5E
+
+.CC57:
+    lda #$08
+    sta $03
+    sta $04
+    rts
+
+.CC5E:
+    lda #$12 : sta $04
+    lda #$A6
+    ldy #$BF
+    jsl $80BF9F
+    lda #$18 : sta $30
+    lda #$A5
+    ldy #$C9
+    jsl $8089D7
+    rts
+
+;---
+
+.CC77: ;12: spin wind up
+.CCA2: ;14: spin
+.CCDA: ;16: spin wind down
+.CCFE: ;18: wait after spin
 .CD06:
 .CD43:
 
 ;---
 
 .CD59:
+
+;---
+
 .CE8D: ;hook
 
 ;---
@@ -173,7 +251,7 @@ _81C549: ;pete
 
     lda #$08
     sta $04
-    jsl $808859
+    jsl rng
     and #$0F
     asl
     tax
@@ -242,12 +320,12 @@ _81C549: ;pete
 
 .D0B0:
     inc $45
-    jsl $808859
+    jsl rng
     and #$0F
     tax
     lda $A92F,X
     sta $44
-    jsl $808859
+    jsl rng
     and #$1F
     sta $32
     lda #$01
@@ -284,4 +362,13 @@ _81C549: ;pete
 ;---
 
 .D119: ;destroy?
+}
+
+;----- 83
+
+{
+_83A837:
+    db $00, $00, $00, $00, $00, $00 ;bomb
+    db $01, $01, $01, $01, $01, $01 ;shoot
+    db $C8, $C8, $C8, $C8           ;jump
 }
