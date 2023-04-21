@@ -360,9 +360,9 @@ _98D000:
     dl $A2941C : db $08
     dl $A29796 : db $2E
     dl $A2A9B2 : db $08
-    dl $A2ACF7 : db $01
+    dl $A2ACF7 : db $01 ;0F8: potion
     dl $A2AD5C : db $05
-    dl $A2AFEF : db $01
+    dl $A2AFEF : db $01 ;100: armor talisman
     dl $A2B066 : db $08
     dl $A2B237 : db $04
     dl $A2B450 : db $02
