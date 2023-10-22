@@ -1,0 +1,608 @@
+;---------- engine defines
+
+;5A9A, obj list, not sure where it starts
+
+;relative to A5(0x8000)
+!score_grid_prev = 0x8D26
+!score_grid_next = 0x8D28
+!score_hi       = 0x8DCE
+!score_p1       = 0x8DD2
+!score_p2       = 0x8DD6
+!is_out_of_bounds = 0x8E43
+!heart_line_is_completed = 0x8EBA
+!heart_line_is_vertical = 0x8EBB
+
+!blocks_pushed = 0x903A
+!enemies_powering_up = 0x9040
+!enemies_active = 0x904A
+!enemies_max_active = 0x904B
+!enemies_inactive = 0x904C
+
+!obj_heart_block = 0x53C2 ;3 objects, 160 bytes per object
+!enemy_power_up_timer = 0x7AA4
+!enemy_powering_up_timer = 0x7AA8
+
+;----------
+
+_01478: ;update score
+    cmpi.b  #0x02, (0x8DDE, A5)
+    beq.w   .15AA
+
+    tst.b   (0x8D84, A5)
+    beq.w   .14AA
+
+    andi.w  #0xFF, D1
+    bclr.l  #0x07, D1
+    sne     D0
+    bne.w   .14A2
+
+    tst.b   (0x97BA, A5)
+    bne.w   .14AC
+
+    rts
+
+.14A2:
+    tst.b   (0x985A, A5)
+    bne.w   .14BA
+
+.14AA:
+    rts
+
+.14AC:
+    lea     (0x8DD6, A5), A0 ;todo: score_p1 + 4, needs math support!
+    movea.l #0x90A388, A1
+    bra.w   .14C4
+
+.14BA:
+    lea     (0x8DDA, A5), A0 ;score_p2 + 4
+    movea.l #0x90B308, A1
+.14C4:
+    movea.l #_F046C, A2
+    add.w   D1, D1
+    move.w  (0, A2, D1.w), D1
+    lea     (0, A2, D1.w), A2
+    move.w  #0x03, D5
+.14D8:
+    abcd    -(A2), -(A0) ;update score (decimal add)
+    dbt     D5, .14D8
+    bcc.w   .14E8
+
+    move.l  #0x99999999, (A0)
+.14E8:
+    movem.l A0, -(A7)
+    bsr.w   .155E
+    movem.l (A7)+, A0
+    move.l  (A0), D1
+    cmp.l   (!score_hi, A5), D1
+    bls.w   .1506
+
+    move.l  D1, (!score_hi, A5)
+    bra.w   .152E
+
+.1506:
+    rts
+
+.152E:
+    ;todo
+
+.155E:
+    ;todo
+
+.15AA: ;heart blocks lined up scoring?
+    tst.b   (0x8D84, A5)
+    beq.w   .14AA
+
+    andi.w  #0xFF, D1
+    bclr.l  #0x07, D1
+    sne     D0
+    bne.w   .15D2
+
+    tst.b   (0x8ED4, A5)
+    bne.w   .15E4
+
+    tst.b   (0x97BA, A5)
+    bne.w   .15E4
+
+    rts
+
+.15D2:
+    tst.b   (0x8ED4, A5)
+    bne.w   .15F2
+
+    tst.b   (0x985A, A5)
+    bne.w   .15F2
+
+    rts
+
+.15E4:
+    lea     (0x8DD6, A5), A0 ;score_p1 + 4
+    movea.l #0x90A2F0, A1
+    bra.w   .14C4
+
+.15F2:
+    lea     (0x8DDA, A5), A0 ;score_p2 + 4
+    movea.l #0x90AEF0, A1
+    bra.w   .14C4
+
+;----------
+
+_465AC: ;heart line-up handler?
+    move.w  (0x20, A0), D2
+    move.w  (0x24, A0), D3
+    add.w   D1, D1
+    move.w  (.65C8, PC, D1.w), D1
+    jmp     (.65C8, PC, D1.w) ;returns and takes rts eventually
+    rts
+
+    move.b #0x00, (0x73B2, A5) ;not sure how this is reached
+    rts
+
+.65C8:
+    d16 0x0020, 0x0022, 0x0070, 0x0096, 0x009A, 0x00C4, 0x012C, 0x0134
+    d16 0x0136, 0x0164, 0x016A, 0x01DA, 0x01DC, 0x01E4, 0x01E4, 0x01E4
+
+.65E8: ;0020
+    rts
+
+.668C: ;00C4 vertical line up?
+    move.b  #0x00, (0x8E65, A5)
+    move.b  #0x00, (0x8EC5, A5)
+    move.w  #0x00, (0x8E6A, A5)
+    move.b  #0x00, (0x8F09, A5)
+    move.b  #0x01, (0x8E59, A5)
+    move.b  #0x01, (0x8E42, A5)
+    tst.b   (0x80, A0)
+    bne.w   .66DE
+
+    tst.b   (0x80, A1)
+    bne.w   .66DE
+
+    tst.b   (0x80, A2)
+    bne.w   .66DE
+
+    move.b  #0x01, (!heart_line_is_completed, A5)
+    move.b  #0x01, (!heart_line_is_vertical, A5)
+    move.b  #0x00, (0x73B0, A5)
+    bra.w   .6796
+
+.66DE:
+    move.b  #0x00, (!heart_line_is_completed, A5)
+    move.b  #0x00, (!heart_line_is_vertical, A5)
+    move.b  #0x01, (0x73B0, A5)
+    bra.w   .6796
+
+.6732: ;016A horizontal line up?
+    move.b  #0x00, (0x8E65, A5)
+    move.b  #0x00, (0x8EC5, A5)
+    move.w  #0x00, (0x8E6A, A5)
+    move.b  #0x00, (0x8F09, A5)
+    move.b  #0x01, (0x8E59, A5)
+    move.b  #0x01, (0x8E42, A5)
+    tst.b   (0x80, A0)
+    bne.w   .6784
+
+    tst.b   (0x80, A1)
+    bne.w   .6784
+
+    tst.b   (0x80, A2)
+    bne.w   .6784
+
+    move.b  #0x01, (!heart_line_is_completed, A5)
+    move.b  #0x00, (!heart_line_is_vertical, A5)
+    move.b  #0x00, (0x73B0, A5)
+    bra.w   .6796
+
+ .6784:
+    move.b  #0x00, (!heart_line_is_completed, A5)
+    move.b  #0x00, (!heart_line_is_vertical, A5)
+    move.b  #0x01, (0x73B0, A5)
+.6796:
+    move.w  (0x20, A0), D0
+    move.w  (0x24, A0), D1
+    jmp     0x0CC8.w
+
+;----------
+
+_46930: ;heart block combo screen transition to "show time"
+    subq.b  #1, (0x8E65, A5) ;timer
+    beq.w     .693C
+
+    jmp     0x0C8C.w
+
+.693C:
+    moveq   #0x25, D1
+    jsr     0x0CAA.w
+    moveq   #0x2F, D1
+    jsr     0x0CAA.w
+    moveq   #0x2C, D1
+    tst.b   (0x73B0, A5)
+    bne.w     .695E
+
+    subq.w  #1, D1
+    tst.b   (!heart_line_is_vertical, A5)
+    beq.w     .695E
+
+    subq.w  #1, D1
+.695E:
+    jsr     0x0CAA.w
+    movea.l #0x90944C, A1
+    move.l  #0x687B0001, (A1)
+    move.w  #0x0100, (0x92DE, A5)
+    move.w  #0x0100, (0x8D32, A5)
+    move.b  #0x5A, (0x8E65, A5)
+    move.b  #0x00, (0x73B3, A5)
+    move.w  #0x06, (0x8E6A, A5)
+    move.w  #0x18, D0
+    moveq   #0x03, D1 ;lower score? (2000)
+    tst.b   (0x73B0, A5)
+    bne.w   .69A6
+
+    moveq   #0x06, D1 ;horizontal score (5000)
+    tst.b   (!heart_line_is_vertical, A5)
+    beq.w   .69A6
+
+    moveq   #0x0B, D1 ;vertical score (10000)
+.69A6:
+    tst.b   (0x97BA, A5)
+    beq.w   .69B2
+
+    jsr     0x05C0.w ;update "score grid"
+.69B2:
+    tst.b   (0x985A, A5)
+    beq.w   .69C0
+
+    ori.b   #0x80, D1
+    jsr     0x05C0.w
+
+.69C0:
+    move.w  #0x8023, D1
+    jmp     0x0CB0.w
+
+;----------
+
+_46D90:
+    tst.b   (!is_out_of_bounds, A5)
+    beq.w   .6DAE
+
+    move.w  #0x02, (0x8EC6, A5)
+    move.w  #0x00, (0x73B6, A5)
+    moveq   #0x00, D0
+    move.b  #0x79, D0
+    jmp     0x333A.w
+
+.6DAE:
+    rts
+
+;----------
+
+;not the start of this function
+    jsr     0x095C.w
+    suba.l  #0x3000, A3
+    tst.w   (0x02, A3)
+    beq.w   .795C
+
+    bset.b  #0x00, (!is_out_of_bounds, A5)
+    rts
+
+.795C:
+    bclr.b  #0x00, (!is_out_of_bounds, A5)
+    rts
+
+;----------
+
+_482F8: ;block pushing?
+    subq.b  #1, (0x55, A0)
+    beq.w   .8370
+
+    cmpi.b  #0x08, (0x55, A0)
+    bne.w   .8366
+
+    jsr     0x3610.w
+    move.b  #0x01, (0x5E, A0)
+    jsr     0x0992.w
+    movea.l (0x72, A0), A3
+    move.w  (0x02, A3), D0
+    move.w  D0, D1
+    andi.w  #0x0C00, D0
+    beq.w   .8362
+
+    andi.w  #0x8000, D1
+    bne.w   .8362
+
+    ori.w   #0x8000, (0x02, A3)
+    jsr     0x0422.w
+    bcs.w   .8362
+
+    move.w  #0x0101, (A1)
+    move.w  (0x4C, A0), (0x06, A1)
+    move.w  (0x20, A0), (0x20, A1)
+    move.w  (0x24, A0), (0x24, A1)
+    move.l  A3, (0x72, A1)
+    addq.w  #1, (!blocks_pushed, A5)
+    addq.b  #1, (0x8E49, A5) ;currently sliding block count?
+.8362:
+    jmp     0x05E4.w
+.8366:
+    move.b  #0x00, (0x5E, A0)
+    jmp     0x05E4.w
+.8370:
+    move.b  #0x00, (0x5E, A0)
+    move.w  #0x00, (0x12, A0)
+    move.w  (0x04C, A0), D0
+    movea.l #0x0DCD0C, A4
+    jmp     0x05D2.w
+
+;----------
+
+_4AB80: ;jelly dies
+    move.l  (0x30, A0), D0
+    beq.b   .AB96
+
+    movea.l D0, A1
+    move.w  #0x06, (0x10, A1)
+    move.l  #0x00, (0x30, A0)
+ .AB96:
+    subq.b  #1, (!enemies_active, A5)
+    addq.b  #1, (0x904E, A5)
+    movea.l (0x40, A0), A1
+    addq.b  #1, (0x46,A1)
+    move.w  #0x01, (0x12, A1)
+    move.w  #0x06, (0x10, A0)
+    movea.l #0xFF0EDC, A1
+    move.w  (0x08, A0), D0
+    lea     (0, A1, D0.w), A1
+    bclr.b  #0x07, (A1)
+    rts
+
+;----------
+
+_4A8D0: ;jelly manhole blocked
+    movea.l (0x72, A0), A3
+    andi.w  #0xFC00, (0x02, A3)
+    bne.w   .AB3A
+
+    ;todo
+.AB3A:
+    move.l  (0x30, A0), D0
+    beq.b   .AB50
+
+    movea.l D0, A1
+    move.w  #0x06, (0x10, A1)
+    move.l  #0x00, (0x30, A0)
+.AB50:
+    movea.l (0x40, A0), A1
+    addq.b  #1, (!enemies_inactive, A5)
+    subq.b  #1, (!enemies_active, A5)
+    move.w  #0x02, (0x12, A1)
+    addq.b  #1, (0x46, A1)
+    move.w  #0x06, (0x10, A0)
+    movea.l #0xFF0EDC, A1
+    move.w  (0x08, A0), D0
+    lea     (0, A1, D0.w), A1
+    bclr.b  #0x04, (A1)
+    rts
+
+;----------
+
+_4F306: ;crocodile manhole blocked
+    movea.l (0x72, A0), A3
+    andi.w  #0xFC00, (0x02, A3)
+    bne.w   .0AB4
+
+    ;todo
+.0AB4:
+    move.l  (0x30, A0), D0
+    beq.b   .0ACA
+
+    movea.l D0, A1
+    move.w  #0x06, (0x10, A1)
+    move.l  #0x00, (0x30, A0)
+.0ACA:
+    movea.l (0x40, A0), A1
+    addq.b  #1, (!enemies_inactive,A5)
+    subq.b  #1, (!enemies_active,A5)
+    move.w  #0x02, (0x12, A1)
+    addq.b  #1, (0x46, A1)
+    move.w  #0x06, (0x10, A0)
+    movea.l #0xFF0EDC, A1
+    move.w  (0x08, A0), D0
+    lea     (0, A1, D0.w), A1
+    bclr.b  #0x04, (A1)
+    rts
+
+;----------
+
+_50AFA: ;crocodile dies
+    move.l  (0x30, A0), D0
+    beq.b   .0B10
+
+    movea.l D0, A1
+    move.w  #0x06, (0x10, A1)
+    move.l  #0x00, (0x30, A0)
+.0B10:
+    subq.b  #1, (!enemies_active, A5)
+    addq.b  #1, (0x904E, A5)
+    movea.l (0x40, A0), A1
+    addq.b  #1, (0x46, A1)
+    move.w  #0x01, (0x12, A1)
+    move.w  #0x06, (0x10, A0)
+    cmpi.w  #0x04, (0x02, A0)
+    beq.b   .0B3C
+
+    subq.b  #1, (0x8ECE, A5)
+    subq.b  #1, (0x903F, A5)
+.0B3C:
+    movea.l #0xFF0EDC, A1
+    move.w  (0x08, A0), D0
+    lea     (0, A1, D0.w), A1
+    bclr.b  #0x07, (A1)
+    rts
+
+;----------
+
+_571AC: ;manhole gets unblocked
+    tst.b   (!enemies_powering_up, A5)
+    bne.w   .7222
+
+    tst.b   (0x905B, A5)
+    bne.w   .7222
+
+    movea.l #0xFF0EDC, A2
+    move.w  (0x08, A0), D0
+    lea     (0, A2, D0.w), A2
+    btst.b  #0x04, (A2)
+    beq.w   .7222
+
+    move.b  (!enemies_max_active, A5), D0
+    cmp.b   (!enemies_active, A5), D0
+    beq.w   .7222
+
+    jsr     0x0410.w
+    bcs.w   .7222
+
+    addq.b  #1, (!enemies_active, A5)
+    subq.b  #1, (!enemies_inactive, A5)
+    move.b  #0x01, (0x44, A0)
+    move.w  #0x0101, (A1)
+    move.w  (0x04, A0), (0x02, A1)
+    move.w  (0x20, A0), (0x20, A1)
+    move.w  (0x24, A0), (0x24, A1)
+    move.w  (0x08, A0), (0x08, A1)
+    move.l  A0, (0x40, A1)
+    move.w  #0x04, (0x10, A0)
+    move.w  #0x00, (0x12, A0)
+    rts
+
+.7222:
+    ;todo
+
+;----------
+
+_7B4F4:
+    tst.w   (0x903C, A5)
+    bne.w   .B516
+
+    move.w  #0x00, (!enemy_power_up_timer, A5)
+    move.b  #0x00, (!enemies_powering_up, A5)
+    move.w  #0x01, (0x903C, A5)
+    move.b  #0x00, (0x7AAA, A5)
+    rts
+
+.B516:
+    tst.b   (0x905B, A5)
+    bne.w   .B564
+
+    tst.b   (0x9041, A5)
+    bne.w   .B564
+
+    tst.b   (!enemies_powering_up, A5)
+    bne.w   .B56C
+
+    tst.b   (0x7AAA, A5)
+    bne.w   .B554
+
+    moveq   #0x00, D0
+    move.b  (0x904D, A5), D0
+    beq.w   .B554
+
+    lsr.b   #1, D0
+    cmp.b   (0x904E, A5), D0
+    bhi.w   .B554
+
+    move.b  #0x01, (0x7AAA, A5)
+    bra.w   .B580
+
+.B554:
+    addq.w  #1, (!enemy_power_up_timer, A5)
+    cmpi.w  #0x0500, (!enemy_power_up_timer, A5)
+    beq.w   .B580
+
+    rts
+
+.B564:
+    move.b  #0x00, (!enemies_powering_up, A5)
+.B56A:
+    rts
+
+.B56C:
+    addq.b  #1, (!enemy_powering_up_timer, A5)
+    cmpi.b  #0x90, (!enemy_powering_up_timer, A5)
+    bne.b   .B56A
+
+    move.b  #0x00, (!enemies_powering_up, A5)
+    rts
+
+.B580:
+    move.b  (!enemies_active, A5), D0
+    cmp.b   (0x8ECE, A5), D0
+    beq.w   .B598
+
+    move.b  #0x01, (!enemies_powering_up, A5)
+    move.b  #0x00, (!enemy_powering_up_timer, A5)
+.B598:
+    move.w  #0x00, (0x7AA4, A5)
+    move.w  #0xC0, (0x8ECC, A5)
+    rts
+
+;----------
+
+_F046C: ;score table
+    ;offsets to following data. points to value + size(=4) + 1), for loading backwards
+    d16 0x0068, 0x006C, 0x0070, 0x0074, 0x0078, 0x007C, 0x0080, 0x0084, 0x0088, 0x008C
+    d16 0x0090, 0x0094, 0x0098, 0x009C, 0x00A0, 0x00A4, 0x00A8, 0x00AC, 0x00B0, 0x00B4
+    d16 0x00B8, 0x00BC, 0x00C0, 0x00C4, 0x00C8, 0x00CC, 0x00D0, 0x00D4, 0x00D8, 0x00DC
+    d16 0x00E0, 0x00E4, 0x00E8, 0x00EC, 0x00F0, 0x00F4, 0x00F8, 0x00FC, 0x0100, 0x0104
+    d16 0x0108, 0x010C, 0x0110, 0x0114, 0x0118, 0x011C, 0x0120, 0x0124, 0x0128, 0x012C
+
+    d32 0x00000100 ;68
+    d32 0x00000500
+    d32 0x00001000
+    d32 0x00002000
+    d32 0x00003000 ;78
+    d32 0x00004000
+    d32 0x00005000
+    d32 0x00006000
+    d32 0x00007000 ;88
+    d32 0x00008000
+    d32 0x00009000
+    d32 0x00010000
+    d32 0x00015000 ;98
+    d32 0x00020000
+    d32 0x00025000
+    d32 0x00030000
+    d32 0x00035000 ;A8
+    d32 0x00040000
+    d32 0x00045000
+    d32 0x00050000
+    d32 0x00060000
+    d32 0x00070000
+    d32 0x00080000
+    d32 0x00090000
+    d32 0x00100000
+    d32 0x01000000
+    d32 0x00016000
+    d32 0x00032000
+    d32 0x00000001
+    d32 0x00000005
+    d32 0x00800000
+    d32 0x00500000
+    d32 0x00300000
+    d32 0x00200000
+    d32 0x00000300
+    d32 0x00000050
+    d32 0x00000030
+    d32 0x00000010
+    d32 0x00000200
+    d32 0x00000400
+    d32 0x00000800
+    d32 0x00001600
+    d32 0x00003200
+    d32 0x00006400
+    d32 0x00012800
+    d32 0x00025600
+    d32 0x00001200
+    d32 0x00002400
+    d32 0x00004800
+    d32 0x00001500
+
+;----------
