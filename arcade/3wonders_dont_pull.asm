@@ -22,6 +22,7 @@
 !enemies_active = 0x904A
 !enemies_max_active = 0x904B
 !enemies_inactive = 0x904C
+!heart_dance = 0x905B ;enemies are dancing. can be 0-2?
 
 !obj_heart_block = 0x53C2 ;3 objects, 160 bytes per object
 !enemy_power_up_timer = 0x7AA4
@@ -483,7 +484,7 @@ _571AC: ;manhole gets unblocked
     tst.b   (!enemies_powering_up, A5)
     bne.w   .7222
 
-    tst.b   (0x905B, A5)
+    tst.b   (!heart_dance, A5)
     bne.w   .7222
 
     movea.l #0xFF0EDC, A2
@@ -537,7 +538,7 @@ _57E86:
     tst.b   (0x8ED5, A5)
     bne.b   .7EEC
 
-    tst.b   (0x905B, A5)
+    tst.b   (!heart_dance, A5)
     bne.b   .7EEC
 
     tst.b   (!stun_potion_dropped, A5)
@@ -584,7 +585,7 @@ _7B4F4:
     rts
 
 .B516:
-    tst.b   (0x905B, A5)
+    tst.b   (!heart_dance, A5)
     bne.w   .B564
 
     tst.b   (0x9041, A5)
