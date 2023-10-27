@@ -126,11 +126,11 @@ _80C374:
     cmp #$0074
     bcs .C412
 
-    jsl $83FD47
+    jsl $83FD47 ;probably get stage clear status
     cmp #$0002
     bne .C412
 
-    lda $84
+    lda !stage_state
     cmp #$0003
     bne .C412
 
@@ -150,9 +150,24 @@ _80C374:
 
 { : org $81EE30 ;EE30 - EE79
 _81EE30: ;stage clear status
-    dw $0002, $0002, $0002, $8002, $8002, $8002 ;area 1
-    dw $0002, $0002, $0002, $0002, $8002, $0002, $0002, $0002
-    dw $0002, $0002, $0002, $8002, $8002, $8002, $0002, $0002
-    dw $0002, $0002, $0002, $0002, $8002, $0002, $0002, $0002
-    dw $8002, $8002, $0002, $0002, $0002, $0002, $8002
+    dw $0002, $0002, $0002, $0002, $0002, $0002 ;area 1
+    dw $0002, $0002, $0002, $0002, $0002, $0002, $0002, $0002
+    dw $0002, $0002, $0002, $0002, $0002, $0002, $0002, $0002
+    dw $0002, $0002, $0002, $0002, $0002, $0002, $0002, $0002
+    dw $0002, $0002, $0002, $0002, $0002, $0002, $0002
+}
+
+;---------- BA
+
+{ : org $BAFB7E
+_BAFB7E: ;loads various save data and sets player state
+    ;Y = offset to player
+    asl
+    tax
+    lda $7001FE,X : sta $0074,Y ;ryo
+    lda $700204,X : sta $0078,Y ;helmet state
+    lda $70020A,X : sta $007A,Y ;armor state
+    lda $700210,X : sta $007C,Y
+    lda $700216,X : sta $00B8,Y ;can replay levels
+    rtl
 }

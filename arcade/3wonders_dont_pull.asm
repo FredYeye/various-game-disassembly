@@ -1,5 +1,6 @@
 ;---------- engine defines
 
+;4CDA, item obj drop list? same as obj list?
 ;5A9A, obj list, not sure where it starts
 
 ;relative to A5(0x8000)
@@ -9,9 +10,13 @@
 !score_p1       = 0x8DD2
 !score_p2       = 0x8DD6
 !is_out_of_bounds = 0x8E43
+!stage = 0x8E54
+!professional_course = 0x8E6C
 !heart_line_is_completed = 0x8EBA
 !heart_line_is_vertical = 0x8EBB
+!stun_potion_dropped = 0x8EC2
 
+!stage_frame_counter = 0x9036
 !blocks_pushed = 0x903A
 !enemies_powering_up = 0x9040
 !enemies_active = 0x904A
@@ -21,6 +26,11 @@
 !obj_heart_block = 0x53C2 ;3 objects, 160 bytes per object
 !enemy_power_up_timer = 0x7AA4
 !enemy_powering_up_timer = 0x7AA8
+
+;----------
+
+    ;heart block object
+    !obj_heart_touching_boundary = 0x80
 
 ;----------
 
@@ -127,6 +137,8 @@ _01478: ;update score
 ;----------
 
 _465AC: ;heart line-up handler?
+    ;A0, A1, A2 = offsets to the 3 heart block objects
+
     move.w  (0x20, A0), D2
     move.w  (0x24, A0), D3
     add.w   D1, D1
@@ -151,13 +163,13 @@ _465AC: ;heart line-up handler?
     move.b  #0x00, (0x8F09, A5)
     move.b  #0x01, (0x8E59, A5)
     move.b  #0x01, (0x8E42, A5)
-    tst.b   (0x80, A0)
+    tst.b   (!obj_heart_touching_boundary, A0)
     bne.w   .66DE
 
-    tst.b   (0x80, A1)
+    tst.b   (!obj_heart_touching_boundary, A1)
     bne.w   .66DE
 
-    tst.b   (0x80, A2)
+    tst.b   (!obj_heart_touching_boundary, A2)
     bne.w   .66DE
 
     move.b  #0x01, (!heart_line_is_completed, A5)
@@ -178,13 +190,13 @@ _465AC: ;heart line-up handler?
     move.b  #0x00, (0x8F09, A5)
     move.b  #0x01, (0x8E59, A5)
     move.b  #0x01, (0x8E42, A5)
-    tst.b   (0x80, A0)
+    tst.b   (!obj_heart_touching_boundary, A0)
     bne.w   .6784
 
-    tst.b   (0x80, A1)
+    tst.b   (!obj_heart_touching_boundary, A1)
     bne.w   .6784
 
-    tst.b   (0x80, A2)
+    tst.b   (!obj_heart_touching_boundary, A2)
     bne.w   .6784
 
     move.b  #0x01, (!heart_line_is_completed, A5)
@@ -440,6 +452,33 @@ _50AFA: ;crocodile dies
 
 ;----------
 
+_55D70:
+    tst.b   (0x76, A0)
+    bne.w   .5EEE
+
+    jsr     0x0986.w
+    move.l  A3, (0x56, A0)
+    lea     (A3), A2
+    suba.l  #0x3000, A2
+    tst.w   (0x02, A2)
+    bne.w   .5E0C
+    ;todo
+
+ .5E0C:
+    move.b  #0x00, (0x76, A0)
+    move.b  #0x01, (!obj_heart_touching_boundary, A0)
+    move.w  #0x00, (0x12, A0)
+    bra.b   .5E2C
+
+    move.b  #0x00, (!obj_heart_touching_boundary, A0)
+    move.w  #0x00, (0x12, A0)
+ .5E2C:
+    ;todo
+
+.5EEE:
+    ;todo
+;----------
+
 _571AC: ;manhole gets unblocked
     tst.b   (!enemies_powering_up, A5)
     bne.w   .7222
@@ -475,6 +514,62 @@ _571AC: ;manhole gets unblocked
 
 .7222:
     ;todo
+
+;----------
+
+_57E86:
+    move.w  #0x02, (0x10, A0)
+    jsr     0x044C.w
+    bcs.w   .7EAC
+
+    move.w  #0x0101, (A1)
+    move.w  (0x20, A0), (0x20, A1)
+    move.w  (0x24, A0), (0x24, A1)
+    move.l  A0, (0x40, A1)
+    move.l  A1, (0x56, A0)
+.7EAC:
+    move.w  (0x20, A0), (0x86, A0)
+    move.w  (0x24, A0), (0x88, A0)
+    jsr     0x095C.w
+    suba.l  #0x1000, A3
+    move.l  A3, (0x72, A0)
+    move.w  #0x8000, (0x02, A3)
+    tst.b   (0x8ED5, A5)
+    bne.b   .7EEC
+
+    tst.b   (0x905B, A5)
+    bne.b   .7EEC
+
+    tst.b   (!stun_potion_dropped, A5)
+    bne.b   .7EEC
+
+    jsr     0x05BA.w
+    andi.w  #0x1F, D0
+    cmpi.w  #0x0B, D0
+    bls.b   .7F12
+
+.7EEC:
+    addq.b  #1, (0x8EC3, A5)
+    cmpi.b  #0x17, (0x8EC3, A5)
+    bls.b   .7EFE
+
+    move.b  #0x00, (0x8EC3, A5)
+.7EFE:
+    moveq   #0x00, D0
+    move.b  (0x8EC3, A5), D0
+    move.w  D0, (0x08, A0)
+    movea.l #0x0DE96E, A4
+    jmp     0x0632.w
+
+.7F12:
+    cmpi.w  #0x0200, (!stage_frame_counter, A5)
+    bls.b   .7EEC
+
+    move.b  #0x01, (!stun_potion_dropped, A5)
+    move.w  #0x18, (0x08, A0)
+    move.w  (0x08, A0), D0
+    movea.l #0x0DE96E, A4
+    jmp     0x0632.w
 
 ;----------
 
