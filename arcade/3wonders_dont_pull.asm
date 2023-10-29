@@ -10,11 +10,14 @@
 !score_p1       = 0x8DD2
 !score_p2       = 0x8DD6
 !is_out_of_bounds = 0x8E43
+!stage_variation = 0x8E50
 !stage = 0x8E54
 !professional_course = 0x8E6C
 !heart_line_is_completed = 0x8EBA
 !heart_line_is_vertical = 0x8EBB
 !stun_potion_dropped = 0x8EC2
+
+!stage_variation_list = 0x8F24
 
 !stage_frame_counter = 0x9036
 !blocks_pushed = 0x903A
@@ -25,6 +28,7 @@
 !heart_dance = 0x905B ;enemies are dancing. can be 0-2?
 
 !obj_heart_block = 0x53C2 ;3 objects, 160 bytes per object
+!rng_stage = 0x55A2
 !enemy_power_up_timer = 0x7AA4
 !enemy_powering_up_timer = 0x7AA8
 
@@ -134,6 +138,156 @@ _01478: ;update score
     lea     (0x8DDA, A5), A0 ;score_p2 + 4
     movea.l #0x90AEF0, A1
     bra.w   .14C4
+
+;----------
+
+_42942: ;store variation to array
+    tst.b   (!professional_course, A5)
+    bne.b   .295A
+
+    lea     (!stage_variation_list, A5), A2
+    moveq   #0x00, D0
+    move.b  (!stage, A5), D0
+    lea     (0, A2, D0.w), A2
+    move.b  (!stage_variation, A5), (A2)
+.295A:
+    rts ;subtracts one to stage_variation upon exit
+
+;----------
+
+_4295C: ;runs when loading next stage
+    tst.b   (!professional_course, A5)
+    beq.b   .2990
+
+    movea.l #0x0E7836, A1
+.2968:
+    moveq   #0x00, D0
+    move.b  (0x8E6D, A5), D0
+    move.b  (0, A1, D0.w), D0
+    lea     (!stage_variation_list, A5), A2
+    moveq   #0x0F, D1
+.2978:
+    cmp.b   (A2)+, D0
+    beq.b   .298A
+    dbf     D1, .2978
+
+    addq.b  #1, (0x8E6D, A5)
+    move.b  D0, (!stage_variation, A5)
+    rts
+
+.298A:
+    addq.b  #1, (0x8E6D, A5)
+    bra.b   .2968
+
+.2990:
+    movem.l A0, -(A7)
+    jsr     _4520E ;D0 = rng
+    movem.l (A7)+, A0
+    andi.w  #0x07, D0
+    movea.l #_E7776, A1
+    moveq   #0x00, D1
+    move.b  (!stage, A5), D1
+    add.w   D1, D1
+    add.w   D1, D1
+    movea.l (0, A1, D1.w), A1
+    move.b  (0, A1, D0.w), (!stage_variation, A5)
+    rts
+
+;----------
+
+_43AF4: d08 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2
+.3B04: d16 0x0000, 0x01A0, 0x01C0
+
+.3B0A: ;load stage?
+    moveq   #0x00, D0
+    move.b  (!stage, A5), D0
+    andi.b  #0x0F, D0
+    move.b  (_43AF4, PC, D0.w), D0
+    move.b  D0, (0x8E58, A5)
+    add.w   D0, D0
+    move.w  (.3B04, PC, D0.w), D1
+    move.w  D1, (0x8E56, A5)
+    moveq   #0x00, D0
+    move.b  (!stage, A5), D0
+    andi.b  #0x0F, D0
+    lsl.w   #4, D0
+    movea.l #0x0D0136, A0
+    tst.b   (0x8ED4, A5)
+    beq.b   .3B44
+
+    movea.l #0x0D0236, A0
+.3B44:
+    lea     (0, A0, D0.w), A0
+    movea.l #0x914800, A1 ;gfx ram? maybe update palette
+    movea.l #0x914000, A2 ;^
+    lea     (0xC0, A2), A2
+    move.l  (A0), (A1)+
+    move.l  (A0)+, (A2)+
+    move.l  (A0), (A1)+
+    move.l  (A0)+, (A2)+
+    move.l  (A0), (A1)+
+    move.l  (A0)+, (A2)+
+    move.l  (A0), (A1)+
+    move.l  (A0)+, (A2)+
+    movea.l #0x0D48C6, A0
+    movea.l #0x0D5676, A1
+    moveq   #0x00, D0
+    move.b  (!stage_variation, A5), D0
+    move.b  (.3BD0, PC, D0.w), D0
+    lsl.l   #8, D0
+    lea     (0, A1, D0.l), A1
+    movea.l #0x90F040, A2
+    lea     (0x40, A2), A3
+    move.w  #0x0F, D5
+    moveq   #0x00, D1
+    move.w  (0x8E56, A5), D1
+    swap    D1
+    addi.l  #0x3C000000, D1
+.3BA0:
+    move.w  #0x07, D4
+.3BA4:
+    moveq   #0x00, D0
+    move.w  (A1)+, D0
+    lsl.l   #4, D0
+    lea     (0, A0, D0.l), A4
+    move.l  (A4)+, (A2)
+    add.l   D1, (A2)+
+    move.l  (A4)+, (A2)
+    add.l   D1, (A2)+
+    move.l  (A4)+, (A3)
+    add.l   D1, (A3)+
+    move.l  (A4)+, (A3)
+    add.l   D1, (A3)+
+    dbf     D4, .3BA4
+
+    lea     (0x40, A2), A2
+    lea     (0x40, A3), A3
+    dbf     D5, .3BA0
+
+    rts
+
+.3BD0:
+    d08 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
+    d08 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+    d08 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F
+    d08 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F
+
+;----------
+
+_4520E: ;rng for picking stages
+    move.w  (!rng_stage, A5), D0
+    bne.b   .5218
+
+    move.w  #0x01C3, D0
+.5218:
+    move.w  D0, D1
+    add.w   D0, D0
+    add.w   D1, D0
+    lsr.w   #8, D0
+    add.b   D0, (0x55A3, A5) ;stage + 1, needs math support!
+    move.b  D0, (!rng_stage, A5)
+    move.b  (0x55A3, A5), D0
+    rts
 
 ;----------
 
@@ -639,6 +793,30 @@ _7B4F4:
     move.w  #0x00, (0x7AA4, A5)
     move.w  #0xC0, (0x8ECC, A5)
     rts
+
+;----------
+
+_E7776:
+    d32 .77B6, .77BE, .77C6, .77CE, .77D6, .77DE, .77E6, .77EE
+    d32 .77F6, .77FE, .7806, .780E, .7816, .781E, .7826, .782E
+
+;these values are likely +1? so 0x01 = 0x00
+.77B6: 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04
+.77BE: 0x11, 0x12, 0x13, 0x15, 0x11, 0x12, 0x13, 0x15
+.77C6: 0x07, 0x08, 0x09, 0x0A, 0x0C, 0x07, 0x08, 0x09
+.77CE: 0x39, 0x3C, 0x3D, 0x3E, 0x39, 0x3C, 0x3D, 0x3E
+.77D6: 0x16, 0x18, 0x1B, 0x1C, 0x16, 0x18, 0x1B, 0x1C
+.77DE: 0x1D, 0x1E, 0x20, 0x21, 0x1D, 0x1E, 0x20, 0x21
+.77E6: 0x24, 0x27, 0x28, 0x29, 0x24, 0x27, 0x28, 0x29
+.77EE: 0x32, 0x33, 0x35, 0x36, 0x32, 0x33, 0x35, 0x36
+.77F6: 0x0D, 0x0E, 0x10, 0x0D, 0x0E, 0x10, 0x0D, 0x0E
+.77FE: 0x2B, 0x2C, 0x2B, 0x2C, 0x2B, 0x2C, 0x2B, 0x2C
+.7806: 0x2D, 0x2E, 0x2D, 0x2E, 0x2D, 0x2E, 0x2D, 0x2E
+.780E: 0x3F, 0x40, 0x3F, 0x40, 0x3F, 0x40, 0x3F, 0x40
+.7816: 0x05, 0x06, 0x05, 0x06, 0x05, 0x06, 0x05, 0x06
+.781E: 0x2F, 0x30, 0x2F, 0x30, 0x2F, 0x30, 0x2F, 0x30
+.7826: 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31
+.782E: 0x37, 0x37, 0x37, 0x37, 0x37, 0x37, 0x37, 0x37
 
 ;----------
 
