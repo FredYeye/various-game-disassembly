@@ -610,7 +610,7 @@ arthur: ;unknown start; placeholder label to have a label to attach sub labels t
     move.b  (0x11, A1), D0
     ext.w   D0
     lsl.w   #3, D0
-    lea     (0x0130, PC), A0 ;.C1CA+2
+    lea     (.C1CA + 2, PC), A0
     adda.w  D0, A0
     clr.w   (!arthur_speed_x, A1)
     move.w  (A0)+, (!arthur_speed_y, A1) ;jump height
