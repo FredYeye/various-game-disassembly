@@ -1,4 +1,4 @@
-;this isn't written for a any specific assembler!
+;note: this isn't written for any specific assembler
 
 ;-----
 
@@ -6,28 +6,147 @@
 
 !frame_counter = $1D
 !rng = $2E
+!exp = $46 ;decimal
+!hearts = $48 ;decimal
 !player_hp = $80
 !seconds = $84 ;"seconds" (15 frames per minute)
 !minutes = $85
 !hours = $86
 
 ; lists
-; the player is the first object in the lists
+; idx 0 = player
+; idx 1-5 = weapons
+; idx 6-? = enemies
 
 ; 0300 current sprite
 !list_y_pos              = $0324
 !list_y_pos_fractional   = $0336
-!list x_pos              = $0348
+!list_x_pos              = $0348
 !list_x_pos_fractional   = $035A
 !list_y_speed            = $036C
 !list_y_speed_fractional = $037E
 !list_x_speed            = $0390
 !list x_speed_fractional = $03A2
 ; 03B4 state?
+; 03C6 ?
 ; 03D8 ?
 !list_facing             = $0420
 ; 0444 ?
 ; 0456 gravity, also used for other things
+!list_hp = $04C2
+; 04D4 ?
+; 04F8 ?
+
+;-----
+
+_497F:
+    ldx #$03 ;1-2 might be whip slots? so 3-5 are sub weapon slots
+.8981:
+    lda $03B4,X
+    beq .898B
+
+    lda $03C6,X
+    beq .898E
+
+.898B:
+    jmp .8A89
+
+.898E:
+    lda $03B4,X
+    cmp #$02
+    beq .89AA
+
+    cmp #$03
+    beq .89AA
+
+    cmp #$05
+    beq .89AA
+
+    cmp #$06
+    beq .89AA
+
+    tay
+    lda $8BE7,Y
+    sta $0B ;damage to deal
+    jmp .89BE
+
+.89AA:
+    ;todo
+
+.89BE:
+    ldy #$06 ;first enemy slot
+.89C0:
+    lda $03B4,Y
+    bne .89C8
+
+.89C5:
+    jmp .8A81
+
+.89C8:
+    cmp #$36
+    beq .89C5
+
+    cmp #$37
+    beq .89C5
+
+    cmp #$25
+    beq .89E0
+
+    lda $03C6,Y
+    bne .89C5
+
+    lda $03D8,Y
+    and #$C2
+    bne .89C5
+
+.89E0:
+    lda $04F8,Y
+    beq .89E8
+
+    jmp .8A81
+
+.89E8:
+    sty $97
+    stx $93
+    tya
+    tax
+    jsr $8C45
+    ldx $93
+    ldy $97
+    lda $0348,X
+    sec
+    sbc $0348,Y
+    bpl .8A03
+
+    ;todo
+.8A03:
+    sbc $0A
+    sec
+    sbc #$04
+    bmi .8A0E
+ 
+    jmp .8A81
+
+.8A0E:
+    lda $0324,Y
+    ;todo
+
+.8A81:
+    iny
+    cpy #$12 ;end of enemy list
+    beq .8A89
+
+    jmp .89C0
+
+.8A89:
+    inx
+    cpx #$06 ;weapon list ends at 5, enemy list starts at 6
+    beq .8A9B
+
+    jmp .8981
+
+.8A9B:
+    rts
 
 ;-----
 

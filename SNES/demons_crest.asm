@@ -19,6 +19,8 @@ lorom
 { ;engine defines
     !area = $8D
 
+    ;0700 sprite oam data
+
     ;0D30 list of sprite IDs for this stage?
     !firebrand_slot = $1000
     !obj_slot = $1080
@@ -52,10 +54,10 @@ lorom
     ;1E54
 }
 
-;---------- 00
+;---------- 80
 
 { : org $80A72E ;? - ?
-    lda.w _BD9F15,X
+    ldy.w _BD9F15,X
 }
 
 { : org $80BEBA ;BEBA -
@@ -69,7 +71,7 @@ _80BEBA:
     bcc .BEC0
 
     ldx !area
-    !A16
+    !AX16
     ldy.w _BDA04A,X
     ;todo
 org $80BF69 : .BF69:
@@ -79,7 +81,7 @@ org $80BF69 : .BF69:
     clc
     adc $0A
     ldx $1C
-    sta $09A0,X
+    sta $09A0,X ;some kind of sprite tile offset. sometimes get overwritten at C067?
     ldx $0000,Y
     bmi .BFA5
 
@@ -97,10 +99,89 @@ org $80BF69 : .BF69:
     lda $14 : sta $28
     lda #$8200 : sta $14
     lda !area : and #$00FF : tay
-    lda.w _BD9C7D,Y
+    lda.w _BD9C7D,Y : sta $20
+    ldy #$0000
+    lda ($20),Y
+    and #$00FF
+    bne .BFC6
 
+    jmp .C112
+
+.BFC6:
+    sta $0004
+    iny
+    lda ($20),Y
+    tax
+    lda #$0002 : sta $06
+    lda #$0000 : sta $08
+    !A8
+    phb
+    lda #$7E : pha : plb
+.BFDE:
+    ldy $08
+    lda $14 : sta $8100,Y
+    lda $15 : sta $8101,Y
+    lda $98E004,X : sta $8105,Y
+    lda #$00 : sta $8104,Y
+    lda $98E000,X : sta $10
+    lda $98E001,X : sta $11
+    lda $98E002,X : sta $12
+    lda $98E003,X
+    beq .C022
+
+    sta $05
+    ldy $10
+    stz $10
+    stz $11
+.C016:
+    phx
+    jsr _80C300
+    jsr _80C300
+    plx
+    dec $05
+    bne .C016
+
+.C022:
+    ldy $08
+    lda $14 : sec : sbc $8100,Y : sta $8102,Y
+    lda $15       : sbc $8101,Y : sta $8103,Y
+    inx #5
+    lda $08 : clc : adc #$06 : sta $08
+    dec $06
+    bne .BFDE
+
+    lda #$02 : sta $06
+    dec $04
+    bne .BFDE
+
+    plb
+    !X8
+    ldy #$03
+.C052:
+    lda ($20),Y
+    cmp #$10
+    bcc .C070
+
+    !A16
+    and #$00FF
+    asl #4
+    ldx $1C
+    inc $1C : inc $1C
+    sta $09A0,X ;update sprite offset?
+    !A8
+    iny #2
+    bra .C052
+
+.C070:
+    cmp #$00
+    bne .C077
+
+    jmp .C108
+
+.C077:
     ;todo
-.C09A:
+
+org $80C09A : .C09A:
     lda $24
     clc
     adc $06
@@ -147,12 +228,14 @@ org $80BF69 : .BF69:
     adc $0E8A
     sta $0E8A
     iny
+.C108:
     !AX16
     tya
     inc
     clc
     adc $20
     sta $0E8E
+.C112:
     !AX16
     lda !area
     and #$00FF
@@ -163,9 +246,11 @@ org $80BF69 : .BF69:
 
 { : org $80C2AF ;C2AF -
 _80C2AF: ;graphics decompression
-    ;todo
-.C2F6:
-    ;todo
+org $80C2F6 : .C2F6:
+}
+
+{ : org $80C300 ;C300 -
+_80C300:
 }
 
 { : org $80D897 ;D897 -
@@ -199,15 +284,97 @@ _80D977: ;sets up sprite ID list
 ;-----
 
 .D9A7:
-    ;todo
+    lda $02 : sta $0960,Y
+    lda ($14),Y
+    and #$00FF
+    sta $06
+    asl
+    adc $06
+    tax
+    lda $8B8002,X : and #$00FF : sta $12
+    lda $8B8000,X
+    clc
+    adc #$8000
+    bcc .D9CD
+
+    ora #$8000
+.D9CD:
+    tay
+    lda $12 : adc #$008B : sta $12
+    ldx $02
+    !A8
+    lda [$10],Y : sta $06 : sta $07
+    jsr .DABD
+.D9E2:
+    lda [$10],Y : sta $7F1000,X
+    jsr .DABD
+    inx
+    lda [$10],Y : sta $7F1000,X
+    jsr .DABD
+    inx
+    dec $06
+    bne .D9E2
+
+.D9FA:
+    lda [$10],Y : sta $7F1000,X : sta $08
+    jsr .DABD
+    inx
+.DA06:
+    lda #$03 : sta $09
+.DA0A:
+    lda #$00 : sta $7F1001,X
+    lda [$10],Y : sta $7F1000,X
+    bpl .DA1E
+
+    lda #$FF : sta $7F1001,X
+.DA1E:
+    jsr .DABD
+    inx #2
+    dec $09
+    bne .DA0A
+
+    lda [$10],Y
+    pha
+    and #$10
+    sta $0C
+    pla
+    clc
+    adc $0A
+    sta $7F1000,X ;sprite data: tile offset
+    jsr .DABD
+    inx
+    lda [$10],Y : adc $0B : sta $7F1000,X
+    jsr .DABD
+    inx
+    lda $7F0FFE,X
+    and #$10
+    cmp $0C
+    beq .DA65
+
+    lda $7F0FFE,X : clc : adc #$10 : sta $7F0FFE,X
+    lda $7F0FFF,X       : adc #$00 : sta $7F0FFF,X
+.DA65:
+    dec $08
+    bne .DA06
+
+    dec $07
+    bne .D9FA
+
+    stx $02
+    !A16
+    rts
 
 ;-----
 
 .DA72:
     ;todo
+
+;-----
+
+org $80DABD : .DABD:
 }
 
-;---------- 01
+;---------- 81
 
 { : org $818D61 ;8D61 -
 completion_mask:
@@ -215,7 +382,7 @@ completion_mask:
 .8D6B: dw $0004, $0008, $0000, $0020, $0000
 }
 
-{ : org $81AD35 ;AD35 -
+{ : org $81AD35 ;AD35 - B19E
 _81AD35: ;sprite related
 
 .AD35:
@@ -238,19 +405,27 @@ _81AD35: ;sprite related
 
 ;-----
 
-.AE11:
+org $81AE11 : .AE11:
     dw .AEF9, .AF15, .AF22, .AF2F, .AF3C, .AF41, .AF4E, .AF57
     dw .AF5E, .AF6F, .AF80, .AF8B, .AF96, .AFA1, .AFB0, .AFBD
     dw .AFBD, .AF08, .AFC2, .AFCB, .AFDA, .AFDF, .AFE6, .AFE9
     dw .AFF8, .AFFF, .B008, .B015, .B025, .B026, .B02F, .B03E
     dw .B043, .B044, .B04B, .B052, .B05D, .B068, .B075, .B07C
     dw .B083, .B08A, .B095, .B0A4, .B0AD, .B0B0, .B0B9, .B0BE
-    dw .B0BE, .B0BE, .AFB0, .AFB0, .B0C5
+    dw .B0BE, .B0BE, .AFB0, .AFB0, .B0C5, .B0C5, .B0C5, .B0BE
+    dw .B0CC, .B0CC, .B0CC, .B015, .B0CC, .B0CC, .B0CC, .B0CC
+    dw .B0CD, .B0D8, .B0E7, .B0EE, .B0F7, .B0FE, .B105, .B110
+    dw .B115, .B115, .B11A, .B121, .B127, .B127, .B127, .B127
+    dw .B128, .B137, .B138, .B128, .B13B, .B13C, .B13D, .B13E
+    dw .B13F, .B140, .B141, .B144, .B149, .B150, .B153, .B158
+    dw .B159, .B162, .B169, .B170, .B177, .B17A, .B17D, .B180
+    dw .B183, .B186, .B189, .B18C, .B18C, .B18C, .B195, .B198
+    dw .B19B, .B19E, .B19E, .B19E
 
 ;-----
 
     ;offset into D30, ?
-.AEF9: ;stage 1, somulo arena
+.AEF9: ;somulo arena
     db $0D, $06
     db $11, $08
     db $3D, $0A
@@ -259,7 +434,7 @@ _81AD35: ;sprite related
     db $0B, $02
     db $0C, $02
     db $00
-.AF08: ;stage 1, area 1
+.AF08: ;somulo exit
     db $0D, $06
     db $11, $08
     db $3F, $0A
@@ -267,7 +442,7 @@ _81AD35: ;sprite related
     db $09, $02
     db $0A, $02
     db $00
-.AF15: ;stage 1, area 2
+.AF15: ;stage 1, area 1
     db $4E, $02 ;vellum
     db $03, $04
     db $61, $06
@@ -275,7 +450,7 @@ _81AD35: ;sprite related
     db $0E, $08
     db $16, $08
     db $00
-.AF22: ;stage 1, area 3
+.AF22: ;stage 1, area 2
     db $4E, $02 ;potion
     db $48, $04
     db $32, $06
@@ -283,7 +458,7 @@ _81AD35: ;sprite related
     db $33, $0A
     db $77, $0A
     db $00
-.AF2F: ;stage 1, area 4
+.AF2F: ;stage 1, area 3
     db $28, $02
     db $29, $04
     db $77, $06
@@ -440,7 +615,6 @@ _81AD35: ;sprite related
     db $70, $06
     db $72, $04
     db $4D, $0A
-    db $00
 .B025:
     db $00
 .B026:
@@ -551,11 +725,237 @@ _81AD35: ;sprite related
     db $6C, $04
     db $6D, $06
     db $00
-.B0C5: ;trio de pago 1
+.B0C5: ;trio de pago
     db $76, $02
     db $78, $04
     db $1D, $06
     db $00
+.B0CC:
+    db $00
+.B0CD:
+    db $2A, $04
+    db $31, $0A
+    db $47, $04
+    db $2B, $04
+    db $2C, $04
+    db $00
+.B0D8:
+    db $52, $02
+    db $52, $04
+    db $52, $06
+    db $43, $06
+    db $44, $08
+    db $51, $0A
+    db $42, $06
+    db $00
+.B0E7:
+    db $49, $08
+    db $4C, $08
+    db $4A, $08
+    db $00
+.B0EE:
+    db $5C, $04
+    db $5D, $04
+    db $5E, $04
+    db $5B, $08
+    db $00
+.B0F7:
+    db $20, $02
+    db $41, $06
+    db $40, $04
+    db $00
+.B0FE:
+    db $56, $08
+    db $54, $0A
+    db $55, $0A
+    db $00
+.B105:
+    db $71, $02
+    db $6F, $06
+    db $70, $06
+    db $72, $04
+    db $73, $04
+    db $00
+.B110:
+    db $63, $06
+    db $62, $04
+    db $00
+.B115:
+    db $16, $08
+    db $0E, $08
+    db $00
+.B11A:
+    db $3E, $06
+    db $3A, $04
+    db $3B, $04
+    db $00
+.B121:
+    db $60, $06
+    db $5F, $08
+    db $5F, $0A
+.B127:
+    db $00
+.B128:
+    db $34, $02
+    db $35, $04
+    db $36, $06
+    db $37, $08
+    db $38, $0A
+    db $39, $0C
+    db $46, $04
+    db $00
+.B137:
+    db $00
+.B138:
+    db $95, $02
+    db $00
+.B13B:
+    db $00
+.B13C:
+    db $00
+.B13D:
+    db $00
+.B13E:
+    db $00
+.B13F:
+    db $00
+.B140:
+    db $00
+.B141:
+    db $4D, $02
+    db $00
+.B144:
+    db $38, $08
+    db $83, $02
+    db $00
+.B149:
+    db $85, $06
+    db $45, $02
+    db $4B, $04
+    db $00
+.B150:
+    db $97, $02
+    db $00
+.B153:
+    db $65, $02
+    db $4B, $04
+    db $00
+.B158:
+    db $00
+.B159:
+    db $87, $02
+    db $99, $08
+    db $45, $06
+    db $4B, $04
+    db $00
+.B162:
+    db $83, $02
+    db $88, $08
+    db $84, $06
+    db $00
+.B169:
+    db $8D, $08
+    db $8B, $0A
+    db $8E, $0C
+    db $00
+.B170:
+    db $87, $02
+    db $99, $06
+    db $4B, $04
+    db $00
+.B177:
+    db $85, $02
+    db $00
+.B17A:
+    db $86, $02
+    db $00
+.B17D:
+    db $89, $08
+    db $00
+.B180:
+    db $8C, $08
+    db $00
+.B183:
+    db $8A, $08
+    db $00
+.B186:
+    db $8B, $08
+    db $00
+.B189:
+    db $8D, $08
+    db $00
+.B18C:
+    db $60, $02
+    db $96, $04
+    db $8F, $06
+    db $4B, $08
+    db $00
+.B195:
+    db $4B, $02
+    db $00
+.B198:
+    db $83, $08
+    db $00
+.B19B:
+    db $83, $08
+    db $00
+.B19E:
+    db $00
+}
+
+{ ;B19F - B2EC
+_81B19F:
+    dw .B1AB, .B1EB, .B26B, .B22B, .B2AB, .B2AB
+
+.B1AB:
+    db $00,$00,$02,$02,$04,$04,$06,$06
+    db $08,$08,$0A,$0A,$0C,$0C,$0E,$0E
+    db $10,$10,$12,$12,$14,$14,$16,$16
+    db $18,$18,$1A,$1A,$1C,$1C,$1E,$1E
+    db $20,$20,$22,$22,$24,$24,$28,$28
+    db $26,$26,$2C,$2A,$2E,$2C,$2A,$90
+    db $30,$C8,$1C,$1C,$04,$04,$0C,$0C
+    db $1C,$1C,$1A,$1A,$12,$12,$1C,$1C
+
+.B1EB:
+    db $00,$2E,$02,$30,$00,$04,$0C,$3A
+    db $0C,$3A,$00,$0A,$06,$34,$04,$32
+    db $00,$10,$14,$42,$00,$14,$00,$16
+    db $1A,$48,$12,$40,$08,$36,$0A,$38
+    db $12,$40,$00,$22,$18,$46,$00,$28
+    db $00,$2A,$00,$2C,$00,$2E,$1C,$92
+    db $1E,$CA,$0E,$3C,$16,$44,$10,$3E
+    db $00,$3C,$00,$3C,$00,$42,$00,$6A
+
+.B22B:
+    db $02,$6A,$00,$68,$00,$04,$08,$70
+    db $08,$70,$12,$7A,$28,$8E,$18,$7E
+    db $00,$10,$1C,$82,$22,$88,$00,$16
+    db $1A,$80,$04,$6C,$06,$6E,$08,$70
+    db $0A,$72,$20,$86,$1E,$84,$0E,$76
+    db $10,$78,$24,$8A,$26,$8C,$2A,$94
+    db $16,$CE,$08,$70,$08,$70,$26,$8E
+    db $04,$6C,$14,$7C,$1C,$82,$0C,$74
+
+.B26B:
+    db $06,$54,$00,$4A,$02,$4C,$04,$4E
+    db $04,$4E,$00,$0A,$12,$60,$18,$66
+    db $00,$10,$14,$62,$00,$14,$00,$16
+    db $10,$5E,$0C,$5A,$08,$56,$0A,$58
+    db $0E,$5C,$00,$22,$16,$64,$00,$28
+    db $00,$2A,$00,$2C,$00,$2E,$1A,$96
+    db $1C,$CC,$00,$56,$00,$56,$00,$0C
+    db $00,$1A,$00,$1C,$00,$12,$00,$68
+
+.B2AB:
+    db $00,$98,$02,$9A,$04,$9C,$06,$9E
+    db $08,$A0,$0A,$A2,$0C,$A4,$0E,$A6
+    db $10,$A8,$12,$AA,$14,$AC,$16,$AE
+    db $18,$B0,$1A,$B2,$1C,$B4,$1E,$B6
+    db $20,$B8,$22,$BA,$24,$BC,$28,$C0
+    db $26,$BE,$2C,$C2,$2E,$C4,$2A,$C6
+    db $30,$D0,$1C,$B4,$04,$9C,$0C,$A4
+    db $1C,$B4,$1A,$B2,$12,$AA,$1C,$B4
 }
 
 { : org $81F6F3 ;F6F3 -
@@ -563,7 +963,7 @@ _81F6F3:
     dw .F720, .F73D ;todo
 
     ;count, vram offset, src addr
-.F720: ;stage 1, area 1
+org $81F720 : .F720: ;stage 1, area 1
     dw $7E00, $0100 : dl $7F0200
     dw $3400, $6600 : dl $7F8000
     dw $0800, $5000 : dl $9EC480 ;eng font, menu items
@@ -573,7 +973,7 @@ _81F6F3:
     ;todo
 }
 
-;---------- 02
+;---------- 82
 
 { : org $8287E9 ;87E9 - 8803
 _8287E9:
@@ -612,12 +1012,12 @@ _82EA34: ;hp up
     bra .EA5E
 
 .EA5B:
-    ;todo
+    lda #$0006
 .EA5E:
     ;todo
 }
 
-;---------- 05
+;---------- 85
 
 { : org $85A1EE ;A1EE -
 _85A1EE: ;check stage requirements
@@ -682,22 +1082,22 @@ _85A1EE: ;check stage requirements
     rtl
 }
 
-;---------- 18
+;---------- 98
 
 { : org $98D000 ;8D00 - 8EFB
 _98D000:
     ;offset to compressed graphics, tile count
                   dl $9F8000 : db $06 ;000: zam, health, health upgrade
-                  dl $9F8266 : db $18
+.walking_ghost:   dl $9F8266 : db $18 ;004
                   dl $9F8C53 : db $12
                   dl $9F9447 : db $1E
-                  dl $9F9FD5 : db $09
+                  dl $9F9FD5 : db $09 ;010
                   dl $9FA395 : db $1B
                   dl $9FAF6E : db $1A
-                  dl $9FB9D6 : db $10
+.somulo_fireball: dl $9FB9D6 : db $10 ;01C
                   dl $9FC048 : db $0C
                   dl $9FC449 : db $0E
-                  dl $9FC97A : db $0B
+.gate_and_dust:   dl $9FC97A : db $0B ;028
                   dl $9FCD01 : db $15
                   dl $9FD69B : db $18
                   dl $9FE050 : db $0D
@@ -740,7 +1140,7 @@ _98D000:
                   dl $A1E39C : db $04
                   dl $A1E521 : db $02
                   dl $A1E5FC : db $18 ;0D0
-                  dl $A1F0DB : db $0A
+.somulo_door:     dl $A1F0DB : db $0A ;0D4
                   dl $A1F506 : db $1A
                   dl $A1FF89 : db $17 ;0DC
                   dl $A287AE : db $14
@@ -757,7 +1157,7 @@ _98D000:
                   dl $A2B450 : db $02
                   dl $A2B4E3 : db $02
                   dl $A2B576 : db $18
-                  dl $A2BD48 : db $04
+.somulo_ashes:    dl $A2BD48 : db $04 ;118
                   dl $A2BEA5 : db $2E
                   dl $A2D26E : db $18
 .arma_projectile: dl $A2DBE0 : db $05 ;124
@@ -816,12 +1216,12 @@ _98D000:
                   dl $A4A39A : db $0D ;1F8
 }
 
-;---------- 3D
+;---------- BD
 
 { : org $BD9953 ;9953 - 9C7C
 _BD9953: ;tile sets to load, indexed by !area
     dw .9A3B, .9A4D, .9A57, $9A61, $9A69, .9A6F, $9A7D, $9A87
-    dw .9A8F, $9A9F, $9AA7, $9AB3, $9ABF, $9ACB, $9AD5, $9AD9
+    dw .9A8F, $9A9F, .9AA7, $9AB3, $9ABF, $9ACB, $9AD5, $9AD9
     dw $9AD9, .9A43, $9ADF, $9AE9, $9AF1, $9AF5, $9AFB, $9AFF
     dw $9B07, $9B0F, $9B19, $9B21, $9B25, $9B27, $9B31, $9B3D
     dw $9B43, $9B45, $9B4D, $9B4F, $9B5B, $9B65, $9B6F, $9B77
@@ -838,18 +1238,18 @@ _BD9953: ;tile sets to load, indexed by !area
 
 ;-----
 
-.9A3B: dw $001C, $0028, $00CC, $FFFF
-.9A43: dw $001C, $0028, $00D4, $0118, $FFFF
-.9A4D: dw offset(_98D000, _98D000_vellum), $0004, $0134, $00A8, $FFFF ;stage 1, area 2
-.9A57: dw offset(_98D000, _98D000_potion), $00EC, $00A4, $0088, $FFFF ;stage 1, area 3
-       dw $0084, $0088, $0184, $FFFF
+.9A3B: dw offset(_98D000, _98D000_somulo_fireball), offset(_98D000, _98D000_gate_and_dust), $00CC, $FFFF ;somulo arena
+.9A43: dw offset(_98D000, _98D000_somulo_fireball), offset(_98D000, _98D000_gate_and_dust), offset(_98D000, _98D000_somulo_door), offset(_98D000, _98D000_somulo_ashes), $FFFF ;somulo exit
+.9A4D: dw offset(_98D000, _98D000_vellum), offset(_98D000, _98D000_walking_ghost), $0134, $00A8, $FFFF ;stage 1, area 1
+.9A57: dw offset(_98D000, _98D000_potion), $00EC, $00A4, $0088, $FFFF ;stage 1, area 2
+.9A61: dw $0084, $0088, $0184, $FFFF ;stage 1, area 3
        dw $017C, $018C, $FFFF
-.9A6F: dw offset(_98D000, _98D000_potion), $0148, $0080, $0044, $0120, $009C, $FFFF ;stage 2, area 2
+.9A6F: dw offset(_98D000, _98D000_potion), offset(_98D000, _98D000_talisman_hand), $0080, $0044, $0120, $009C, $FFFF ;stage 2, area 2
        dw offset(_98D000, _98D000_vellum), $0018, $0008, $004C, $FFFF
        dw $0054, $004C, $0058, $FFFF
 .9A8F: dw $0108, $0108, $0108, $00DC, $00E0, $0104, offset(_98D000, _98D000_fire_crests), $FFFF ;stage 2, ovnunu
        dw $0014, $0040, $00A4, $FFFF
-       dw offset(_98D000, _98D000_potion), $002C, $0008, $0098, $010C, $FFFF
+.9AA7: dw offset(_98D000, _98D000_potion), $002C, $0008, $0098, $010C, $FFFF ;stage 3, area 1
        dw offset(_98D000, _98D000_vellum), $0080, $0074, $0038, $0070, $FFFF
        dw $0080, $0120, $0068, $0008, $010C, $FFFF
        dw $0080, $0074, $0008, $0070, $FFFF
@@ -883,7 +1283,7 @@ _BD9953: ;tile sets to load, indexed by !area
        dw $011C, $01F8, $01F0, $01F4, $FFFF
        dw $0168, $0158, $FFFF
        dw $0158, $0160, $0164, $FFFF
-       dw $0180, $0188, $0058, $FFFF
+.9BB5: dw $0180, $0188, $0058, $FFFF ;trio de pago
        dw $008C, $00A0, $00E8, $FFFF
        dw $0108, $0108, $0108, $00DC, $00E0, $0104, $FFFF
        dw $00F0, $FFFF
@@ -923,7 +1323,7 @@ _BD9953: ;tile sets to load, indexed by !area
 .9C7B: dw $FFFF
 }
 
-{ : org $BD9C7D ;9C7D - 9F14
+{ ;9C7D - 9F14
 _BD9C7D:
     dw .9D65, .9D7B, .9D9D, .9D8A, .9D9D, .9D9D, .9D9D, .9D9D
     dw .9D9E, .9DA5, .9DB6, .9DB6, .9DB6, .9DB7, .9DC8, .9DD1
@@ -943,9 +1343,14 @@ _BD9C7D:
 
 ;-----
 
-.9D65: db $13, $00, $00, $18, $09, $1C, $0A, $10, $0B, $14, $0C, $00, $00
-.9D72: db $0A : dw $0000 : db $18, $09, $1C, $0A, $00, $00
-.9D7B: db $08, $BE, $00, $1C, $0E, $01, $3C, $00, $00, $00, $02, $14, $80, $15, $A0
+;some of these values are used for sprite tile offsets. they replace the auto generated value
+;for example, $18 & $1C below replace the offsets at $09A0,X
+
+.9D65: db $13 : dw $0000 : db $18, $09, $1C, $0A, $10, $0B, $14, $0C, $00, $00
+.9D72: db $0A : dw $0000 : db $18, $09, $1C, $0A, $00, $00 ;somulo exit
+.9D7B: ;stage 1, area 1
+    db $08 : dw $00BE : db $1C, $0E, $01 : dw $003C : dw $0000
+    db $02, $14, $80, $15, $A0
 .9D8A:
     db $0F : dw $0366 : db $1C ;?
     db $5A ;seems to go unused?
@@ -978,7 +1383,7 @@ _BD9C7D:
 .9E69: db $11, $3C, $05, $1C, $62, $01, $4C, $01, $00, $00, $02, $AA, $40, $AB, $60, $00
 .9E79: db $0C, $FC, $03, $1C, $5F, $1C, $5F, $00, $00
 .9E82: db $0A, $E6, $05, $18, $7B, $1C, $7C, $00, $00
-.9E8B: db $05, $0E, $01, $18, $2B, $1C, $2C, $00, $00, $00
+.9E8B: db $05 : dw $010E : db $18, $2B, $1C, $2C, $00, $00, $00 ;trio de pago, and others?
 .9E95: db $10, $F4, $01, $1E, $42, $00, $00, $00
 .9E9D: db $09, $94, $02, $18, $4C, $1C, $4A, $00, $00, $00, $00
 .9EA8: db $0F, $66, $03, $1C, $5B, $00, $00, $00, $00
@@ -1029,7 +1434,7 @@ _BD9F15:
 .A049: db $00
 }
 
-{ ;A04A - A282?
+{ ;A04A - A281?
 _BDA04A:
     dw .A132, .A137, .A13C, .A13C, .A141, .A146, .A151, .A151
     dw .A151, .A15F, .A16A, .A175, .A16A, .A175, .A180, .A175

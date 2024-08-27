@@ -12,8 +12,32 @@
 
 ;-----
 
+_006CA2:
+    movem.l D0-D1/A0-A1, -(A7)
+    lea     0x612000, A0
+    move.w  #0x07FF, D0
+    moveq   #0x00, D1
+.6CB2:
+    move.l  D1, (A0)+
+    dbra    D0, .6CB2
+
+    lea     !line_ram + 0xA200, A0
+    move.w  #0x00FF, D0
+.6CC2:
+    move.w  D1, (A0)+
+    dbra    D0, .6CC2
+
+    move.w  D1, (0x80F6, A5)
+    move.w  D1, (0x80FA, A5)
+    move.w  D1, (0x811E, A5)
+    move.w  D1, (0x8122, A5)
+    movem.l (A7)+, D0-D1/A0-A1
+    rts
+
+;-----
+
 _0BD5D8:
-    ;A5: $408000
+    ;A5: 0x408000
 
     move.w  D2, -(A7)
     sub.w   (0x0998, A5), D0 ;8998
@@ -88,6 +112,11 @@ _0BD642:
 
 ;-----
 
+_13448A: ;humongous vram setup function before starting a stage
+    ;todo
+
+;-----
+
 _1503C6:
     link.w  A6, #0
     movem.l D4-D7, -(A7)
@@ -113,7 +142,7 @@ _1503C6:
 
 _155472: ;ceiling lamp code, when crashed on the floor
 	;A4: obj offset
-	;A5: $408000
+	;A5: 0x408000
 
     tst.w   (!power_out, A5)
     beq.w   .54A6
@@ -184,7 +213,7 @@ _155540: ;don't know what this is
 
 _15554A: ;ceiling lamp code, when crashing
 	;A4: obj offset
-    ;A5: $408000
+    ;A5: 0x408000
 
     move.w  #0x01A4, (0x56, A4) ;set "lights out" timer the first time. related to the flashing that happens when the lamp hits the floor?
     addi.w  #0x01, (!lights_out, A5)
@@ -322,7 +351,7 @@ _1557AA:
 
 _15583C:
 	;A4: obj offset
-	;A5: $408000
+	;A5: 0x408000
 
     tst.w   (0x4DC8, A5) ;$CDC8
     bne.w   .5860
